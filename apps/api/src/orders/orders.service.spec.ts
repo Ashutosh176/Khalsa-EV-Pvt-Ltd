@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Mock } from "jest-mock";
 import { BadRequestException, ConflictException } from "@nestjs/common";
+import { OrderStatus } from "@prisma/client";
 import { OrdersService } from "./orders.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
@@ -174,6 +175,97 @@ describe("OrdersService", () => {
       );
       expect(tx.stockMovement.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ type: "RELEASE", quantity: 3 }) }),
+      );
+    });
+  });
+
+  describe("updateStatusAdmin", () => {
+    it("rejects an illegal transition (e.g. PENDING straight to DELIVERED)", async () => {
+      prisma.order.findUnique.mockResolvedValue({ id: "order-1", status: "PENDING", items: [] });
+      await expect(service.updateStatusAdmin("order-1", { status: OrderStatus.DELIVERED })).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it("allows PENDING -> CONFIRMED and stamps confirmedAt", async () => {
+      prisma.order.findUnique.mockResolvedValue({ id: "order-1", status: "PENDING", items: [] });
+      await service.updateStatusAdmin("order-1", { status: OrderStatus.CONFIRMED });
+      expect(tx.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ status: "CONFIRMED", confirmedAt: expect.any(Date) }) }),
+      );
+    });
+
+    it("deducts currentStock and reservedStock together when transitioning to PACKED", async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: "order-1",
+        status: "PROCESSING",
+        items: [cartItemRow({ quantity: 4 })],
+      });
+
+      await service.updateStatusAdmin("order-1", { status: OrderStatus.PACKED });
+
+      expect(tx.inventory.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { currentStock: { decrement: 4 }, reservedStock: { decrement: 4 } },
+        }),
+      );
+      expect(tx.stockMovement.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ type: "DEDUCT", quantity: 4 }) }),
+      );
+    });
+
+    it("releases (not restocks) when cancelling before fulfillment (e.g. from CONFIRMED)", async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: "order-1",
+        status: "CONFIRMED",
+        items: [cartItemRow({ quantity: 2 })],
+      });
+
+      await service.updateStatusAdmin("order-1", { status: OrderStatus.CANCELLED });
+
+      expect(tx.inventory.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { reservedStock: { decrement: 2 } } }),
+      );
+      expect(tx.stockMovement.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ type: "RELEASE" }) }),
+      );
+    });
+
+    it("restocks currentStock (not just releases) when cancelling after fulfillment began (from PACKED)", async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: "order-1",
+        status: "PACKED",
+        items: [cartItemRow({ quantity: 2 })],
+      });
+
+      await service.updateStatusAdmin("order-1", { status: OrderStatus.CANCELLED });
+
+      expect(tx.inventory.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { currentStock: { increment: 2 } } }),
+      );
+      expect(tx.stockMovement.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ type: "RESTOCK" }) }),
+      );
+    });
+
+    it("restocks currentStock when a delivered order is returned", async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: "order-1",
+        status: "DELIVERED",
+        items: [cartItemRow({ quantity: 1 })],
+      });
+
+      await service.updateStatusAdmin("order-1", { status: OrderStatus.RETURNED });
+
+      expect(tx.inventory.update).toHaveBeenCalledWith(
+        expect.objectContaining({ data: { currentStock: { increment: 1 } } }),
+      );
+    });
+
+    it("rejects transitioning a terminal RETURNED order any further (REFUNDED not reachable yet)", async () => {
+      prisma.order.findUnique.mockResolvedValue({ id: "order-1", status: "RETURNED", items: [] });
+      await expect(service.updateStatusAdmin("order-1", { status: OrderStatus.REFUNDED })).rejects.toThrow(
+        BadRequestException,
       );
     });
   });

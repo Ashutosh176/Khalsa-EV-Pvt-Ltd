@@ -12,6 +12,7 @@ import { CartModule } from "./cart/cart.module";
 import { WishlistModule } from "./wishlist/wishlist.module";
 import { AddressesModule } from "./addresses/addresses.module";
 import { OrdersModule } from "./orders/orders.module";
+import { InventoryModule } from "./inventory/inventory.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { OrdersModule } from "./orders/orders.module";
     WishlistModule,
     AddressesModule,
     OrdersModule,
+    InventoryModule,
   ],
   controllers: [HealthController],
 })

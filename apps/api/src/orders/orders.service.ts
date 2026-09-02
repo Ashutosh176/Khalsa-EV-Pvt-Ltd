@@ -1,9 +1,12 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, ProductStatus } from "@prisma/client";
+import { OrderStatus, Prisma, ProductStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
 import { generateOrderNumber } from "../common/order-number";
+import { ALLOWED_ORDER_TRANSITIONS, STOCK_DEDUCTED_AT_OR_AFTER } from "./order-status";
 import { CreateOrderDto } from "./dto/create-order.dto";
+import { ListOrdersQuery } from "./dto/list-orders.query";
+import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
 
 const ORDER_INCLUDE = {
   items: true,
@@ -13,6 +16,19 @@ const ORDER_INCLUDE = {
   payment: true,
   shipment: true,
 } satisfies Prisma.OrderInclude;
+
+const ADMIN_LIST_INCLUDE = {
+  user: { select: { id: true, name: true, email: true } },
+  items: true,
+} satisfies Prisma.OrderInclude;
+
+const ADMIN_DETAIL_INCLUDE = {
+  ...ORDER_INCLUDE,
+  user: { select: { id: true, name: true, email: true, phone: true } },
+} satisfies Prisma.OrderInclude;
+
+type OrderItemLike = { productId: string; variantId: string | null; quantity: number };
+type TxClient = Prisma.TransactionClient;
 
 @Injectable()
 export class OrdersService {
@@ -134,7 +150,7 @@ export class OrdersService {
     // Cart is intentionally left untouched here: there is no payment
     // integration yet (Razorpay wiring is deferred), so this order isn't
     // actually paid for. Clearing the cart belongs at payment confirmation,
-    // not at order creation - see docs for the current state of this flow.
+    // not at order creation - see docs/payment.md for the current state.
     return this.findOne(userId, orderId);
   }
 
@@ -156,43 +172,174 @@ export class OrdersService {
 
   async cancel(userId: string, orderId: string, reason?: string) {
     const order = await this.findOne(userId, orderId);
-    if (order.status !== "PENDING") {
+    if (order.status !== OrderStatus.PENDING) {
       throw new BadRequestException("Only pending orders can be cancelled this way");
     }
 
     await this.prisma.$transaction(async (tx) => {
-      for (const item of order.items) {
-        const inventory = await tx.inventory.findFirst({
-          where: item.variantId ? { variantId: item.variantId } : { productId: item.productId },
-        });
-        if (!inventory) continue;
-
-        await tx.inventory.update({
-          where: { id: inventory.id },
-          data: { reservedStock: { decrement: item.quantity } },
-        });
-        await tx.stockMovement.create({
-          data: {
-            inventoryId: inventory.id,
-            type: "RELEASE",
-            quantity: item.quantity,
-            referenceType: "Order",
-            referenceId: order.id,
-            reason: reason ?? "Order cancelled by customer",
-          },
-        });
-      }
-
+      await this.releaseReservedStock(tx, order.id, order.items, reason ?? "Order cancelled by customer");
       await tx.order.update({
         where: { id: order.id },
-        data: { status: "CANCELLED", cancelledAt: new Date(), cancellationReason: reason },
+        data: { status: OrderStatus.CANCELLED, cancelledAt: new Date(), cancellationReason: reason },
       });
       await tx.orderStatusHistory.create({
-        data: { orderId: order.id, status: "CANCELLED", note: reason ?? "Cancelled by customer" },
+        data: { orderId: order.id, status: OrderStatus.CANCELLED, note: reason ?? "Cancelled by customer" },
       });
     });
 
     return this.findOne(userId, orderId);
+  }
+
+  // --- Admin ---
+
+  async findAllAdmin(query: ListOrdersQuery) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+
+    const where: Prisma.OrderWhereInput = {
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              { orderNumber: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
+              { user: { email: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
+              { user: { name: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
+            ],
+          }
+        : {}),
+    };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.order.findMany({
+        where,
+        include: ADMIN_LIST_INCLUDE,
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return { items, total, page, pageSize };
+  }
+
+  async findOneAdmin(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: ADMIN_DETAIL_INCLUDE });
+    if (!order) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+    return order;
+  }
+
+  async updateStatusAdmin(orderId: string, dto: UpdateOrderStatusDto) {
+    const order = await this.findOneAdmin(orderId);
+
+    if (!ALLOWED_ORDER_TRANSITIONS[order.status].includes(dto.status)) {
+      throw new BadRequestException(`Cannot transition an order from ${order.status} to ${dto.status}`);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (dto.status === OrderStatus.PACKED) {
+        await this.deductStockForFulfillment(tx, order.id, order.items);
+      } else if (dto.status === OrderStatus.CANCELLED) {
+        if (STOCK_DEDUCTED_AT_OR_AFTER.includes(order.status)) {
+          await this.restockItems(tx, order.id, order.items, dto.note ?? "Order cancelled after fulfillment began");
+        } else {
+          await this.releaseReservedStock(tx, order.id, order.items, dto.note ?? "Order cancelled by admin");
+        }
+      } else if (dto.status === OrderStatus.RETURNED) {
+        await this.restockItems(tx, order.id, order.items, dto.note ?? "Customer return");
+      }
+
+      const timestamps: Prisma.OrderUpdateInput = {};
+      if (dto.status === OrderStatus.CONFIRMED) timestamps.confirmedAt = new Date();
+      if (dto.status === OrderStatus.DELIVERED) timestamps.deliveredAt = new Date();
+      if (dto.status === OrderStatus.CANCELLED) {
+        timestamps.cancelledAt = new Date();
+        timestamps.cancellationReason = dto.note;
+      }
+
+      await tx.order.update({ where: { id: order.id }, data: { status: dto.status, ...timestamps } });
+      await tx.orderStatusHistory.create({
+        data: { orderId: order.id, status: dto.status, note: dto.note },
+      });
+    });
+
+    return this.findOneAdmin(orderId);
+  }
+
+  // --- Inventory side-effects, shared by customer cancel and admin status updates ---
+
+  private async releaseReservedStock(tx: TxClient, orderId: string, items: OrderItemLike[], reason: string) {
+    for (const item of items) {
+      const inventory = await tx.inventory.findFirst({
+        where: item.variantId ? { variantId: item.variantId } : { productId: item.productId },
+      });
+      if (!inventory) continue;
+
+      await tx.inventory.update({
+        where: { id: inventory.id },
+        data: { reservedStock: { decrement: item.quantity } },
+      });
+      await tx.stockMovement.create({
+        data: {
+          inventoryId: inventory.id,
+          type: "RELEASE",
+          quantity: item.quantity,
+          referenceType: "Order",
+          referenceId: orderId,
+          reason,
+        },
+      });
+    }
+  }
+
+  private async deductStockForFulfillment(tx: TxClient, orderId: string, items: OrderItemLike[]) {
+    for (const item of items) {
+      const inventory = await tx.inventory.findFirst({
+        where: item.variantId ? { variantId: item.variantId } : { productId: item.productId },
+      });
+      if (!inventory) continue;
+
+      await tx.inventory.update({
+        where: { id: inventory.id },
+        data: { currentStock: { decrement: item.quantity }, reservedStock: { decrement: item.quantity } },
+      });
+      await tx.stockMovement.create({
+        data: {
+          inventoryId: inventory.id,
+          type: "DEDUCT",
+          quantity: item.quantity,
+          referenceType: "Order",
+          referenceId: orderId,
+          reason: "Packed for shipping",
+        },
+      });
+    }
+  }
+
+  private async restockItems(tx: TxClient, orderId: string, items: OrderItemLike[], reason: string) {
+    for (const item of items) {
+      const inventory = await tx.inventory.findFirst({
+        where: item.variantId ? { variantId: item.variantId } : { productId: item.productId },
+      });
+      if (!inventory) continue;
+
+      await tx.inventory.update({
+        where: { id: inventory.id },
+        data: { currentStock: { increment: item.quantity } },
+      });
+      await tx.stockMovement.create({
+        data: {
+          inventoryId: inventory.id,
+          type: "RESTOCK",
+          quantity: item.quantity,
+          referenceType: "Order",
+          referenceId: orderId,
+          reason,
+        },
+      });
+    }
   }
 
   private async requireOwnedAddress(userId: string, addressId: string) {
