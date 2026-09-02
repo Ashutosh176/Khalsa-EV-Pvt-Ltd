@@ -1,7 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@khalsa-ev/ui";
+import { useAuth } from "../lib/auth-context";
+import { useCart } from "../lib/cart-context";
 
 export function Header() {
+  const { user, logout } = useAuth();
+  const { cart } = useCart();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    router.push("/");
+  }
+
   return (
     <header className="border-b border-slate-200 bg-white/90 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -24,11 +38,31 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700">
+          <button className="hidden rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 sm:inline-flex">
             Search
           </button>
-          <Button variant="secondary">Wishlist</Button>
-          <Button>Cart (3)</Button>
+          <Link href="/wishlist">
+            <Button variant="secondary">Wishlist</Button>
+          </Link>
+          <Link href="/cart">
+            <Button>Cart{cart && cart.itemCount > 0 ? ` (${cart.itemCount})` : ""}</Button>
+          </Link>
+          {user ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-red-300 hover:text-red-500"
+            >
+              Log out
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+            >
+              Log in
+            </Link>
+          )}
         </div>
       </div>
     </header>

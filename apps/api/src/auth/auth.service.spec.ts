@@ -1,47 +1,57 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Mock } from "jest-mock";
-import { UnauthorizedException } from "@nestjs/common";
+import { ConflictException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { hash } from "bcrypt";
 import { Role } from "@prisma/client";
 import { AuthService } from "./auth.service";
 import { PrismaService } from "../prisma/prisma.service";
 
-type AdminRow = { id: string; email: string; role: Role | null; isActive: boolean; passwordHash: string };
+type UserRow = { id: string; email: string; role: Role | null; isActive: boolean; passwordHash: string };
+type AsyncFn<T> = (...args: unknown[]) => Promise<T>;
 
 describe("AuthService", () => {
   let service: AuthService;
-  let prisma: { user: { findUnique: Mock<() => Promise<AdminRow | null>> } };
+  let prisma: {
+    user: {
+      findUnique: Mock<AsyncFn<UserRow | null>>;
+      create: Mock<AsyncFn<UserRow>>;
+    };
+  };
 
   beforeEach(() => {
     process.env.JWT_ACCESS_SECRET = "test-access-secret";
     process.env.JWT_REFRESH_SECRET = "test-refresh-secret";
-    prisma = { user: { findUnique: jest.fn() } };
+    prisma = {
+      user: {
+        findUnique: jest.fn<AsyncFn<UserRow | null>>(),
+        create: jest.fn<AsyncFn<UserRow>>(),
+      },
+    };
     service = new AuthService(prisma as unknown as PrismaService, new JwtService());
   });
 
-  describe("validateAdmin", () => {
+  describe("validateUser", () => {
     it("rejects an unknown email", async () => {
       prisma.user.findUnique.mockResolvedValue(null);
-      await expect(service.validateAdmin("nobody@khalsaev.com", "password123")).rejects.toThrow(
+      await expect(service.validateUser("nobody@khalsaev.com", "password123")).rejects.toThrow(
         UnauthorizedException,
       );
     });
 
-    it("rejects a customer account (role is null)", async () => {
-      prisma.user.findUnique.mockResolvedValue({
+    it("accepts a customer account (role is null) - customer login has no role requirement", async () => {
+      const user = {
         id: "u1",
         email: "customer@khalsaev.com",
         role: null,
         isActive: true,
         passwordHash: await hash("password123", 4),
-      });
-      await expect(service.validateAdmin("customer@khalsaev.com", "password123")).rejects.toThrow(
-        UnauthorizedException,
-      );
+      };
+      prisma.user.findUnique.mockResolvedValue(user);
+      await expect(service.validateUser("customer@khalsaev.com", "password123")).resolves.toEqual(user);
     });
 
-    it("rejects a deactivated admin account", async () => {
+    it("rejects a deactivated account", async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: "u1",
         email: "admin@khalsaev.com",
@@ -49,7 +59,7 @@ describe("AuthService", () => {
         isActive: false,
         passwordHash: await hash("password123", 4),
       });
-      await expect(service.validateAdmin("admin@khalsaev.com", "password123")).rejects.toThrow(
+      await expect(service.validateUser("admin@khalsaev.com", "password123")).rejects.toThrow(
         UnauthorizedException,
       );
     });
@@ -62,7 +72,7 @@ describe("AuthService", () => {
         isActive: true,
         passwordHash: await hash("correct-password", 4),
       });
-      await expect(service.validateAdmin("admin@khalsaev.com", "wrong-password")).rejects.toThrow(
+      await expect(service.validateUser("admin@khalsaev.com", "wrong-password")).rejects.toThrow(
         UnauthorizedException,
       );
     });
@@ -76,13 +86,79 @@ describe("AuthService", () => {
         passwordHash: await hash("correct-password", 4),
       };
       prisma.user.findUnique.mockResolvedValue(user);
-      await expect(service.validateAdmin("admin@khalsaev.com", "correct-password")).resolves.toEqual(user);
+      await expect(service.validateUser("admin@khalsaev.com", "correct-password")).resolves.toEqual(user);
+    });
+  });
+
+  describe("requireAdminRole", () => {
+    it("rejects a customer account", () => {
+      expect(() => service.requireAdminRole({ role: null } as UserRow as never)).toThrow(UnauthorizedException);
+    });
+
+    it("accepts any non-null role", () => {
+      expect(() => service.requireAdminRole({ role: Role.SUPPORT_MANAGER } as UserRow as never)).not.toThrow();
+    });
+  });
+
+  describe("register", () => {
+    it("rejects when the email is already taken", async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: "existing",
+        email: "taken@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: "x",
+      });
+      await expect(
+        service.register({ email: "taken@khalsaev.com", password: "password123", name: "Someone" }),
+      ).rejects.toThrow(ConflictException);
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it("creates the user with role: null (never an admin via self-registration)", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: "new-user",
+        email: "new@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: "hashed",
+      });
+
+      await service.register({ email: "new@khalsaev.com", password: "password123", name: "New Customer" });
+
+      expect(prisma.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ role: null, email: "new@khalsaev.com" }) }),
+      );
+    });
+
+    it("never stores the plaintext password", async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: "new-user",
+        email: "new@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: "hashed",
+      });
+
+      await service.register({ email: "new@khalsaev.com", password: "super-secret-password", name: "New Customer" });
+
+      const [[createArgs]] = prisma.user.create.mock.calls as [[{ data: { passwordHash: string } }]];
+      expect(createArgs.data.passwordHash).not.toBe("super-secret-password");
     });
   });
 
   describe("token issuance", () => {
     it("issues an access token that verifies with the access secret", () => {
       const payload = { sub: "u1", email: "admin@khalsaev.com", role: Role.SUPER_ADMIN };
+      const token = service.issueAccessToken(payload);
+      const jwt = new JwtService();
+      expect(jwt.verify(token, { secret: "test-access-secret" })).toMatchObject(payload);
+    });
+
+    it("issues a valid token for a customer payload with role: null", () => {
+      const payload = { sub: "u1", email: "customer@khalsaev.com", role: null };
       const token = service.issueAccessToken(payload);
       const jwt = new JwtService();
       expect(jwt.verify(token, { secret: "test-access-secret" })).toMatchObject(payload);

@@ -105,3 +105,47 @@ export type PaginatedResult<T> = {
   page: number;
   pageSize: number;
 };
+
+// Customer auth + cart/wishlist (Phase 6)
+
+export type CustomerUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type CartItemView = {
+  id: string;
+  productId: string;
+  variantId: string | null;
+  quantity: number;
+  savedForLater: boolean;
+  unitPrice: number;
+  mrp: number;
+  lineTotal: number;
+  inStock: boolean;
+  product: { name: string; slug: string; sku: string; imageUrl?: string };
+  variant: { color: string | null } | null;
+};
+
+export type CartView = {
+  items: CartItemView[];
+  itemCount: number;
+  subtotal: number;
+  totalMrp: number;
+  totalSavings: number;
+};
+
+export type WishlistItemView = {
+  id: string;
+  productId: string;
+  product: {
+    name: string;
+    slug: string;
+    sku: string;
+    price: number;
+    mrp: number;
+    imageUrl?: string;
+    inStock: boolean;
+  };
+};

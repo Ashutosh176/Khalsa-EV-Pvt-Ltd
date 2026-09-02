@@ -8,6 +8,8 @@ import { BrandsModule } from "./brands/brands.module";
 import { VehiclesModule } from "./vehicles/vehicles.module";
 import { CompatibilityModule } from "./compatibility/compatibility.module";
 import { CatalogModule } from "./catalog/catalog.module";
+import { CartModule } from "./cart/cart.module";
+import { WishlistModule } from "./wishlist/wishlist.module";
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { CatalogModule } from "./catalog/catalog.module";
     VehiclesModule,
     CompatibilityModule,
     CatalogModule,
+    CartModule,
+    WishlistModule,
   ],
   controllers: [HealthController],
 })

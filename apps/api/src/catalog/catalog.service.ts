@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, ProductStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { computeAvailableStock } from "../common/stock";
 import { ListCatalogQuery } from "./dto/list-catalog.query";
 
 const LIST_INCLUDE = {
@@ -20,7 +21,7 @@ const DETAIL_INCLUDE = {
 type ProductWithInventory = { inventory: { currentStock: number; reservedStock: number }[] };
 
 function withStockSummary<T extends ProductWithInventory>(product: T) {
-  const availableStock = product.inventory.reduce((sum, row) => sum + (row.currentStock - row.reservedStock), 0);
+  const availableStock = computeAvailableStock(product.inventory);
   const rest: Record<string, unknown> = { ...product };
   delete rest.inventory;
   return { ...rest, inStock: availableStock > 0, availableStock };

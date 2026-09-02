@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "../components/Providers";
 
 export const metadata: Metadata = {
   title: "Khalsa EV | Genuine EV Spare Parts",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="bg-slate-50 text-brand-ink antialiased">{children}</body>
+      <body className="bg-slate-50 text-brand-ink antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

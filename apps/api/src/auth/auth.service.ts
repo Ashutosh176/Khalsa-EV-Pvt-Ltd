@@ -1,14 +1,18 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { compare } from "bcrypt";
+import { compare, hash } from "bcrypt";
 import type { User } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { requireEnv } from "../common/env";
 import type { JwtPayload } from "./auth.types";
+import type { RegisterDto } from "./dto/register.dto";
 
 export const ACCESS_TOKEN_TTL = "15m";
 export const REFRESH_TOKEN_TTL = "7d";
-export const REFRESH_COOKIE_NAME = "khalsa_admin_refresh";
+export const ADMIN_REFRESH_COOKIE_NAME = "khalsa_admin_refresh";
+export const CUSTOMER_REFRESH_COOKIE_NAME = "khalsa_customer_refresh";
+
+const PASSWORD_HASH_ROUNDS = 12;
 
 @Injectable()
 export class AuthService {
@@ -17,9 +21,12 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async validateAdmin(email: string, password: string): Promise<User> {
+  // Shared by both admin and customer login - role is checked by the
+  // caller (AdminAuthController requires a non-null role; customer
+  // login accepts any active account).
+  async validateUser(email: string, password: string): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user || !user.role || !user.isActive) {
+    if (!user || !user.isActive) {
       throw new UnauthorizedException("Invalid email or password");
     }
 
@@ -31,10 +38,31 @@ export class AuthService {
     return user;
   }
 
-  toPayload(user: User): JwtPayload {
-    if (!user.role) {
-      throw new UnauthorizedException("Not an admin account");
+  async register(dto: RegisterDto): Promise<User> {
+    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (existing) {
+      throw new ConflictException("An account with this email already exists");
     }
+
+    const passwordHash = await hash(dto.password, PASSWORD_HASH_ROUNDS);
+    return this.prisma.user.create({
+      data: {
+        email: dto.email,
+        name: dto.name,
+        phone: dto.phone,
+        passwordHash,
+        role: null,
+      },
+    });
+  }
+
+  requireAdminRole(user: User): void {
+    if (!user.role) {
+      throw new UnauthorizedException("This account does not have admin access");
+    }
+  }
+
+  toPayload(user: User): JwtPayload {
     return { sub: user.id, email: user.email, role: user.role };
   }
 
@@ -64,8 +92,8 @@ export class AuthService {
 
   async reissueForRefresh(payload: JwtPayload): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
-    if (!user || !user.role || !user.isActive) {
-      throw new UnauthorizedException("Account no longer has admin access");
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException("Account no longer exists or is inactive");
     }
     return user;
   }

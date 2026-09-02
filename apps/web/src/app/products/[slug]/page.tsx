@@ -4,6 +4,7 @@ import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
 import { getCatalogProduct } from "../../../lib/api";
 import { formatIndianRupees } from "@khalsa-ev/utils";
+import { ProductActions } from "./ProductActions";
 
 async function loadProduct(slug: string) {
   try {
@@ -96,6 +97,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {product.inStock ? `In stock (${product.availableStock} available)` : "Out of stock"}
               </span>
             </div>
+
+            <ProductActions productId={product.id} inStock={product.inStock} />
 
             {product.warrantyMonths ? (
               <p className="mt-4 text-sm text-slate-600">Warranty: {product.warrantyMonths} months</p>
