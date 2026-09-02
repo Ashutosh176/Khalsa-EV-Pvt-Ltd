@@ -1,8 +1,10 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res, UnauthorizedException, UseGuards } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { PrismaService } from "../prisma/prisma.service";
 import { LoginDto } from "./dto/login.dto";
 import { RegisterDto } from "./dto/register.dto";
+import { UpdateProfileDto } from "./dto/update-profile.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { CUSTOMER_REFRESH_COOKIE_NAME, AuthService } from "./auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser } from "./decorators/current-user.decorator";
@@ -26,7 +28,7 @@ export class CustomerAuthController {
 
     return {
       accessToken: this.authService.issueAccessToken(payload),
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
     };
   }
 
@@ -39,7 +41,7 @@ export class CustomerAuthController {
 
     return {
       accessToken: this.authService.issueAccessToken(payload),
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
     };
   }
 
@@ -70,7 +72,22 @@ export class CustomerAuthController {
   @UseGuards(JwtAuthGuard)
   async me(@CurrentUser() currentUser: JwtPayload) {
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: currentUser.sub } });
-    return { id: user.id, name: user.name, email: user.email };
+    return { id: user.id, name: user.name, email: user.email, phone: user.phone };
+  }
+
+  @Patch("me")
+  @UseGuards(JwtAuthGuard)
+  async updateMe(@CurrentUser() currentUser: JwtPayload, @Body() dto: UpdateProfileDto) {
+    const user = await this.authService.updateProfile(currentUser.sub, dto);
+    return { id: user.id, name: user.name, email: user.email, phone: user.phone };
+  }
+
+  @Post("change-password")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@CurrentUser() currentUser: JwtPayload, @Body() dto: ChangePasswordDto) {
+    await this.authService.changePassword(currentUser.sub, dto);
+    return { status: "ok" };
   }
 
   private setRefreshCookie(res: Response, token: string) {

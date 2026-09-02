@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Mock } from "jest-mock";
-import { ConflictException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ConflictException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { hash } from "bcrypt";
 import { Role } from "@prisma/client";
@@ -15,7 +15,9 @@ describe("AuthService", () => {
   let prisma: {
     user: {
       findUnique: Mock<AsyncFn<UserRow | null>>;
+      findUniqueOrThrow: Mock<AsyncFn<UserRow>>;
       create: Mock<AsyncFn<UserRow>>;
+      update: Mock<AsyncFn<UserRow>>;
     };
   };
 
@@ -25,7 +27,9 @@ describe("AuthService", () => {
     prisma = {
       user: {
         findUnique: jest.fn<AsyncFn<UserRow | null>>(),
+        findUniqueOrThrow: jest.fn<AsyncFn<UserRow>>(),
         create: jest.fn<AsyncFn<UserRow>>(),
+        update: jest.fn<AsyncFn<UserRow>>(),
       },
     };
     service = new AuthService(prisma as unknown as PrismaService, new JwtService());
@@ -146,6 +150,65 @@ describe("AuthService", () => {
 
       const [[createArgs]] = prisma.user.create.mock.calls as [[{ data: { passwordHash: string } }]];
       expect(createArgs.data.passwordHash).not.toBe("super-secret-password");
+    });
+  });
+
+  describe("updateProfile", () => {
+    it("updates only name and phone", async () => {
+      prisma.user.update.mockResolvedValue({
+        id: "u1",
+        email: "customer@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: "hashed",
+      });
+
+      await service.updateProfile("u1", { name: "New Name", phone: "9999999999" });
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: "u1" },
+        data: { name: "New Name", phone: "9999999999" },
+      });
+    });
+  });
+
+  describe("changePassword", () => {
+    it("rejects when the current password is wrong", async () => {
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        id: "u1",
+        email: "customer@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: await hash("correct-password", 4),
+      });
+
+      await expect(
+        service.changePassword("u1", { currentPassword: "wrong-password", newPassword: "new-password-123" }),
+      ).rejects.toThrow(BadRequestException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it("hashes and saves the new password when the current password matches", async () => {
+      prisma.user.findUniqueOrThrow.mockResolvedValue({
+        id: "u1",
+        email: "customer@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: await hash("correct-password", 4),
+      });
+      prisma.user.update.mockResolvedValue({
+        id: "u1",
+        email: "customer@khalsaev.com",
+        role: null,
+        isActive: true,
+        passwordHash: "new-hashed",
+      });
+
+      await service.changePassword("u1", { currentPassword: "correct-password", newPassword: "new-password-123" });
+
+      const [[updateArgs]] = prisma.user.update.mock.calls as [[{ where: { id: string }; data: { passwordHash: string } }]];
+      expect(updateArgs.where).toEqual({ id: "u1" });
+      expect(updateArgs.data.passwordHash).not.toBe("new-password-123");
     });
   });
 

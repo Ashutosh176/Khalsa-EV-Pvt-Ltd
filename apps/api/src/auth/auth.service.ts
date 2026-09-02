@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { compare, hash } from "bcrypt";
 import type { User } from "@prisma/client";
@@ -6,6 +6,8 @@ import { PrismaService } from "../prisma/prisma.service";
 import { requireEnv } from "../common/env";
 import type { JwtPayload } from "./auth.types";
 import type { RegisterDto } from "./dto/register.dto";
+import type { UpdateProfileDto } from "./dto/update-profile.dto";
+import type { ChangePasswordDto } from "./dto/change-password.dto";
 
 export const ACCESS_TOKEN_TTL = "15m";
 export const REFRESH_TOKEN_TTL = "7d";
@@ -54,6 +56,23 @@ export class AuthService {
         role: null,
       },
     });
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { name: dto.name, phone: dto.phone },
+    });
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const matches = await compare(dto.currentPassword, user.passwordHash);
+    if (!matches) {
+      throw new BadRequestException("Current password is incorrect");
+    }
+    const passwordHash = await hash(dto.newPassword, PASSWORD_HASH_ROUNDS);
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   }
 
   requireAdminRole(user: User): void {

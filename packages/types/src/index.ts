@@ -112,6 +112,7 @@ export type CustomerUser = {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
 };
 
 export type CartItemView = {
@@ -148,4 +149,100 @@ export type WishlistItemView = {
     imageUrl?: string;
     inStock: boolean;
   };
+};
+
+// Account area (Phase 9): addresses, orders, returns
+
+export type Address = {
+  id: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+};
+
+export type AddressInput = {
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country?: string;
+  isDefault?: boolean;
+};
+
+export type OrderStatusValue =
+  | "PENDING"
+  | "CONFIRMED"
+  | "PROCESSING"
+  | "PACKED"
+  | "SHIPPED"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "CANCELLED"
+  | "RETURNED"
+  | "REFUNDED";
+
+export type OrderItemView = {
+  id: string;
+  productId: string;
+  variantId: string | null;
+  productNameSnapshot: string;
+  skuSnapshot: string;
+  quantity: number;
+  unitPrice: number;
+  mrp: number;
+  totalAmount: number;
+};
+
+export type OrderStatusHistoryEntry = {
+  id: string;
+  status: OrderStatusValue;
+  note: string | null;
+  createdAt: string;
+};
+
+export type OrderView = {
+  id: string;
+  orderNumber: string;
+  status: OrderStatusValue;
+  subtotal: number;
+  discountAmount: number;
+  shippingAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  placedAt: string;
+  cancelledAt: string | null;
+  cancellationReason: string | null;
+  items: OrderItemView[];
+  statusHistory: OrderStatusHistoryEntry[];
+  shippingAddress: Address;
+  billingAddress: Address | null;
+};
+
+export type ReturnStatusValue = "REQUESTED" | "APPROVED" | "REJECTED" | "PICKED_UP" | "RECEIVED" | "COMPLETED";
+
+export type ReturnView = {
+  id: string;
+  orderId: string;
+  orderItemId: string | null;
+  reason: string;
+  status: ReturnStatusValue;
+  adminNote: string | null;
+  createdAt: string;
+  order: { id: string; orderNumber: string };
+  refund: { id: string; status: string; amount: number } | null;
+};
+
+export type CreateReturnInput = {
+  orderId: string;
+  orderItemId?: string;
+  reason: string;
 };

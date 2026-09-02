@@ -13,6 +13,7 @@ import { WishlistModule } from "./wishlist/wishlist.module";
 import { AddressesModule } from "./addresses/addresses.module";
 import { OrdersModule } from "./orders/orders.module";
 import { InventoryModule } from "./inventory/inventory.module";
+import { ReturnsModule } from "./returns/returns.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { InventoryModule } from "./inventory/inventory.module";
     AddressesModule,
     OrdersModule,
     InventoryModule,
+    ReturnsModule,
   ],
   controllers: [HealthController],
 })

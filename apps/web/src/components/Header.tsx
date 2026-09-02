@@ -48,13 +48,21 @@ export function Header() {
             <Button>Cart{cart && cart.itemCount > 0 ? ` (${cart.itemCount})` : ""}</Button>
           </Link>
           {user ? (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-red-300 hover:text-red-500"
-            >
-              Log out
-            </button>
+            <>
+              <Link
+                href="/account"
+                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-brand-green hover:text-brand-green"
+              >
+                Account
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-red-300 hover:text-red-500"
+              >
+                Log out
+              </button>
+            </>
           ) : (
             <Link
               href="/login"

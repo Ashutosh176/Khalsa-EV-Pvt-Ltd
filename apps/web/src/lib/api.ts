@@ -1,10 +1,15 @@
 import type {
+  Address,
+  AddressInput,
   CartView,
   CatalogProduct,
   CatalogProductDetail,
   Category,
+  CreateReturnInput,
   CustomerUser,
+  OrderView,
   PaginatedResult,
+  ReturnView,
   VehicleBrand,
   VehicleModel,
   VehicleVariant,
@@ -122,6 +127,17 @@ export function getCurrentCustomer(accessToken: string) {
   return authFetch<CustomerUser>("/auth/me", accessToken);
 }
 
+export function updateCustomerProfile(accessToken: string, dto: { name?: string; phone?: string }) {
+  return authFetch<CustomerUser>("/auth/me", accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function changeCustomerPassword(accessToken: string, dto: { currentPassword: string; newPassword: string }) {
+  return authFetch<{ status: string }>("/auth/change-password", accessToken, {
+    method: "POST",
+    body: JSON.stringify(dto),
+  });
+}
+
 // --- Cart ---
 
 export function getCart(accessToken: string) {
@@ -170,4 +186,49 @@ export function moveWishlistItemToCart(accessToken: string, itemId: string) {
     accessToken,
     { method: "POST" },
   );
+}
+
+// --- Addresses ---
+
+export function getAddresses(accessToken: string) {
+  return authFetch<Address[]>("/addresses", accessToken);
+}
+
+export function createAddress(accessToken: string, dto: AddressInput) {
+  return authFetch<Address>("/addresses", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateAddress(accessToken: string, id: string, dto: Partial<AddressInput>) {
+  return authFetch<Address>(`/addresses/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function deleteAddress(accessToken: string, id: string) {
+  return authFetch<Address>(`/addresses/${id}`, accessToken, { method: "DELETE" });
+}
+
+// --- Orders ---
+
+export function getOrders(accessToken: string) {
+  return authFetch<OrderView[]>("/orders", accessToken);
+}
+
+export function getOrder(accessToken: string, id: string) {
+  return authFetch<OrderView>(`/orders/${id}`, accessToken);
+}
+
+export function cancelOrder(accessToken: string, id: string, reason?: string) {
+  return authFetch<OrderView>(`/orders/${id}/cancel`, accessToken, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+// --- Returns ---
+
+export function getReturns(accessToken: string) {
+  return authFetch<ReturnView[]>("/returns", accessToken);
+}
+
+export function createReturn(accessToken: string, dto: CreateReturnInput) {
+  return authFetch<ReturnView>("/returns", accessToken, { method: "POST", body: JSON.stringify(dto) });
 }
