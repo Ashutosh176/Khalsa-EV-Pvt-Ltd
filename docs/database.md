@@ -60,6 +60,17 @@ overselling risk (Section 16, Section 39). The migration was hand-edited after
 Prisma's schema DSL can't express either of these directly, so if the schema is ever
 regenerated from scratch, both need to be re-added by hand to the new migration.
 
+**`ProductCompatibility` has the same NULL-uniqueness gap**, caught the hard way in
+Phase 5 by actually exercising the API rather than trusting the schema: the plain
+`@@unique([productId, vehicleVariantId, vehicleYearId])` correctly stops duplicates
+when `vehicleYearId` is set, but silently let duplicate "compatible with all years"
+rows through when it's `NULL` (the common case). Fixed the same way, with a partial
+unique index (`migrations/20260902074745_compatibility_partial_unique_index`) on
+`(productId, vehicleVariantId) WHERE vehicleYearId IS NULL`. Any future table with a
+similarly-nullable discriminator column in a unique constraint needs the same partial
+index treatment - a plain `@@unique` including a nullable column is never enough on
+its own.
+
 **`OrderStatusHistory` is a separate table**, not just derived from `Order.status`
 plus a few timestamp columns, because the customer order-tracking UI needs a real
 timeline (Section 15/56 - explicitly no live map, just a status history).

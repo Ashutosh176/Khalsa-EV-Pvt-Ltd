@@ -8,9 +8,9 @@ import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ListProductsQuery } from "./dto/list-products.query";
 
-// Admin-only for now: the public catalog listing/detail endpoints are
-// Phase 5 (Section 44 - "Compatibility + Customer Catalog + Scooters").
-@Controller("products")
+// Admin management endpoints. The public storefront reads from
+// CatalogController at /products instead (Section 44 Phase 5).
+@Controller("admin/products")
 @UseGuards(AdminAuthGuard, RolesGuard)
 @Roles(Role.SUPER_ADMIN, Role.PRODUCT_MANAGER)
 export class ProductsController {

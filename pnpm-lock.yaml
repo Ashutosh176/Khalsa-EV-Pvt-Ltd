@@ -162,9 +162,15 @@ importers:
 
   apps/web:
     dependencies:
+      '@khalsa-ev/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@khalsa-ev/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@khalsa-ev/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       next:
         specifier: ^16.3.3
         version: 16.3.3(@babel/core@8.0.1)(@types/node@22.20.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -208,6 +214,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@khalsa-ev/utils':
+        specifier: workspace:*
+        version: link:../utils
       react:
         specifier: ^19.0.0
         version: 19.2.8

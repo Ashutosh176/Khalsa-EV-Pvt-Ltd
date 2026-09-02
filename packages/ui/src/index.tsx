@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { formatIndianRupees } from "@khalsa-ev/utils";
 
 export const brand = {
   green: "#42b419",
@@ -129,5 +130,69 @@ export function ProductCard({
         </button>
       </div>
     </article>
+  );
+}
+
+// Real-catalog product card (API-backed data, prices in paise). Omits
+// rating/wishlist/cart-add - Reviews, Wishlist, and Cart aren't built
+// yet (Phases 6/9), so no fake affordances for features that don't work.
+export function CatalogProductCard({
+  slug,
+  name,
+  sku,
+  price,
+  mrp,
+  inStock,
+  imageUrl,
+}: {
+  slug: string;
+  name: string;
+  sku: string;
+  price: number;
+  mrp: number;
+  inStock: boolean;
+  imageUrl?: string;
+}) {
+  const discountPercent = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
+
+  return (
+    <a
+      href={`/products/${slug}`}
+      className="group block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-transform hover:-translate-y-1 hover:shadow-lg"
+    >
+      <div className="flex h-48 items-center justify-center bg-[radial-gradient(circle_at_top,_#ecfdf5,_#eef7ee_40%,_#f5f5f5_100%)]">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- shared package, no next/image dependency
+          <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-5xl">🔧</span>
+        )}
+      </div>
+      <div className="p-5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{sku}</span>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${
+              inStock ? "bg-brand-green/10 text-brand-green" : "bg-red-50 text-red-500"
+            }`}
+          >
+            {inStock ? "In stock" : "Out of stock"}
+          </span>
+        </div>
+        <h3 className="mt-3 line-clamp-2 text-lg font-bold text-brand-ink">{name}</h3>
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-xl font-black text-brand-ink">{formatIndianRupees(price)}</span>
+          {discountPercent > 0 ? (
+            <>
+              <span className="text-sm text-slate-400 line-through">{formatIndianRupees(mrp)}</span>
+              <span className="text-sm font-semibold text-brand-green">{discountPercent}% off</span>
+            </>
+          ) : null}
+        </div>
+        <span className="mt-5 inline-flex w-full items-center justify-center rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-brand-ink transition group-hover:border-brand-green group-hover:text-brand-green">
+          View details
+        </span>
+      </div>
+    </a>
   );
 }

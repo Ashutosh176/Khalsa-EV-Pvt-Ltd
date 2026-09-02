@@ -5,9 +5,21 @@ import { AuthModule } from "./auth/auth.module";
 import { ProductsModule } from "./products/products.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { BrandsModule } from "./brands/brands.module";
+import { VehiclesModule } from "./vehicles/vehicles.module";
+import { CompatibilityModule } from "./compatibility/compatibility.module";
+import { CatalogModule } from "./catalog/catalog.module";
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, CategoriesModule, BrandsModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    ProductsModule,
+    CategoriesModule,
+    BrandsModule,
+    VehiclesModule,
+    CompatibilityModule,
+    CatalogModule,
+  ],
   controllers: [HealthController],
 })
 export class AppModule {}
