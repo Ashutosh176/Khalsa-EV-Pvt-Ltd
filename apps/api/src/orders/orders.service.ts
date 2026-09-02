@@ -1,0 +1,205 @@
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma, ProductStatus } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
+import { generateOrderNumber } from "../common/order-number";
+import { CreateOrderDto } from "./dto/create-order.dto";
+
+const ORDER_INCLUDE = {
+  items: true,
+  statusHistory: { orderBy: { createdAt: Prisma.SortOrder.asc } },
+  shippingAddress: true,
+  billingAddress: true,
+  payment: true,
+  shipment: true,
+} satisfies Prisma.OrderInclude;
+
+@Injectable()
+export class OrdersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createFromCart(userId: string, dto: CreateOrderDto) {
+    const shippingAddress = await this.requireOwnedAddress(userId, dto.shippingAddressId);
+    const billingAddress = dto.billingAddressId
+      ? await this.requireOwnedAddress(userId, dto.billingAddressId)
+      : shippingAddress;
+
+    const cart = await this.prisma.cart.findUnique({
+      where: { userId },
+      include: {
+        items: {
+          where: { savedForLater: false },
+          include: { product: true, variant: true },
+        },
+      },
+    });
+    if (!cart || cart.items.length === 0) {
+      throw new BadRequestException("Your cart is empty");
+    }
+
+    for (const item of cart.items) {
+      if (item.product.status !== ProductStatus.ACTIVE) {
+        throw new BadRequestException(`"${item.product.name}" is no longer available`);
+      }
+    }
+
+    // Never trust anything cached on the cart item - price is read fresh
+    // from Product/ProductVariant here, same as CartService (Section 11).
+    const lineItems = cart.items.map((item) => {
+      const unitPrice = item.product.price + (item.variant?.priceDelta ?? 0);
+      const lineTotal = unitPrice * item.quantity;
+      const gstPercent = Number(item.product.gstPercent);
+      // Prices are GST-inclusive (Section 9's product page already says
+      // "Inclusive of X% GST"), so tax is the portion already inside the
+      // price, not added on top - reverse-GST extraction for reporting.
+      const taxPortion = gstPercent > 0 ? Math.round((lineTotal * gstPercent) / (100 + gstPercent)) : 0;
+      return { item, unitPrice, lineTotal, taxPortion };
+    });
+
+    const subtotal = lineItems.reduce((sum, li) => sum + li.lineTotal, 0);
+    const taxAmount = lineItems.reduce((sum, li) => sum + li.taxPortion, 0);
+    const discountAmount = 0; // no coupon system wired up yet
+    const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD_PAISE ? 0 : FLAT_SHIPPING_FEE_PAISE;
+    const totalAmount = subtotal - discountAmount + shippingAmount;
+
+    const orderId = await this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
+        data: {
+          orderNumber: generateOrderNumber(),
+          userId,
+          subtotal,
+          discountAmount,
+          shippingAmount,
+          taxAmount,
+          totalAmount,
+          shippingAddressId: shippingAddress.id,
+          billingAddressId: billingAddress.id,
+        },
+      });
+
+      for (const { item, unitPrice, lineTotal } of lineItems) {
+        await tx.orderItem.create({
+          data: {
+            orderId: order.id,
+            productId: item.productId,
+            variantId: item.variantId,
+            productNameSnapshot: item.product.name,
+            skuSnapshot: item.variant?.sku ?? item.product.sku,
+            quantity: item.quantity,
+            unitPrice,
+            mrp: item.product.mrp,
+            totalAmount: lineTotal,
+          },
+        });
+
+        const inventory = await tx.inventory.findFirst({
+          where: item.variantId ? { variantId: item.variantId } : { productId: item.productId },
+        });
+        if (!inventory) {
+          throw new ConflictException(`No inventory record for "${item.product.name}"`);
+        }
+
+        // Atomic conditional reservation: the availability check and the
+        // increment happen in one statement, so two concurrent orders for
+        // the last unit can't both succeed (Section 16 / Section 39).
+        const reserved = await tx.$executeRaw`
+          UPDATE "Inventory"
+          SET "reservedStock" = "reservedStock" + ${item.quantity}
+          WHERE id = ${inventory.id}
+            AND ("currentStock" - "reservedStock") >= ${item.quantity}
+        `;
+        if (reserved === 0) {
+          throw new ConflictException(`Insufficient stock for "${item.product.name}"`);
+        }
+
+        await tx.stockMovement.create({
+          data: {
+            inventoryId: inventory.id,
+            type: "RESERVE",
+            quantity: item.quantity,
+            referenceType: "Order",
+            referenceId: order.id,
+            reason: "Order placed, awaiting payment",
+          },
+        });
+      }
+
+      await tx.orderStatusHistory.create({
+        data: { orderId: order.id, status: "PENDING", note: "Order placed, awaiting payment" },
+      });
+
+      return order.id;
+    });
+
+    // Cart is intentionally left untouched here: there is no payment
+    // integration yet (Razorpay wiring is deferred), so this order isn't
+    // actually paid for. Clearing the cart belongs at payment confirmation,
+    // not at order creation - see docs for the current state of this flow.
+    return this.findOne(userId, orderId);
+  }
+
+  async findAll(userId: string) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: ORDER_INCLUDE,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async findOne(userId: string, orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId }, include: ORDER_INCLUDE });
+    if (!order || order.userId !== userId) {
+      throw new NotFoundException(`Order ${orderId} not found`);
+    }
+    return order;
+  }
+
+  async cancel(userId: string, orderId: string, reason?: string) {
+    const order = await this.findOne(userId, orderId);
+    if (order.status !== "PENDING") {
+      throw new BadRequestException("Only pending orders can be cancelled this way");
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of order.items) {
+        const inventory = await tx.inventory.findFirst({
+          where: item.variantId ? { variantId: item.variantId } : { productId: item.productId },
+        });
+        if (!inventory) continue;
+
+        await tx.inventory.update({
+          where: { id: inventory.id },
+          data: { reservedStock: { decrement: item.quantity } },
+        });
+        await tx.stockMovement.create({
+          data: {
+            inventoryId: inventory.id,
+            type: "RELEASE",
+            quantity: item.quantity,
+            referenceType: "Order",
+            referenceId: order.id,
+            reason: reason ?? "Order cancelled by customer",
+          },
+        });
+      }
+
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: "CANCELLED", cancelledAt: new Date(), cancellationReason: reason },
+      });
+      await tx.orderStatusHistory.create({
+        data: { orderId: order.id, status: "CANCELLED", note: reason ?? "Cancelled by customer" },
+      });
+    });
+
+    return this.findOne(userId, orderId);
+  }
+
+  private async requireOwnedAddress(userId: string, addressId: string) {
+    const address = await this.prisma.address.findUnique({ where: { id: addressId } });
+    if (!address || address.userId !== userId) {
+      throw new BadRequestException("Address does not belong to you");
+    }
+    return address;
+  }
+}

@@ -10,6 +10,8 @@ import { CompatibilityModule } from "./compatibility/compatibility.module";
 import { CatalogModule } from "./catalog/catalog.module";
 import { CartModule } from "./cart/cart.module";
 import { WishlistModule } from "./wishlist/wishlist.module";
+import { AddressesModule } from "./addresses/addresses.module";
+import { OrdersModule } from "./orders/orders.module";
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { WishlistModule } from "./wishlist/wishlist.module";
     CatalogModule,
     CartModule,
     WishlistModule,
+    AddressesModule,
+    OrdersModule,
   ],
   controllers: [HealthController],
 })
