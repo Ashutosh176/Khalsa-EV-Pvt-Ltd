@@ -6,6 +6,7 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { OrdersService } from "./orders.service";
 import { ListOrdersQuery } from "./dto/list-orders.query";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
+import { UpdateShipmentDto } from "../shipping/dto/update-shipment.dto";
 
 @Controller("admin/orders")
 @UseGuards(AdminAuthGuard, RolesGuard)
@@ -26,5 +27,10 @@ export class AdminOrdersController {
   @Patch(":id/status")
   updateStatus(@Param("id") id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.ordersService.updateStatusAdmin(id, dto);
+  }
+
+  @Patch(":id/shipment")
+  updateShipment(@Param("id") id: string, @Body() dto: UpdateShipmentDto) {
+    return this.ordersService.updateShipmentAdmin(id, dto);
   }
 }

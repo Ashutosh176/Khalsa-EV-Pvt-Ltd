@@ -4,6 +4,8 @@ import { BadRequestException, ConflictException } from "@nestjs/common";
 import { OrderStatus } from "@prisma/client";
 import { OrdersService } from "./orders.service";
 import { PrismaService } from "../prisma/prisma.service";
+import type { ShippingService } from "../shipping/shipping.service";
+import type { NotificationsService } from "../notifications/notifications.service";
 import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
 
 type Row = { id: string; [key: string]: unknown };
@@ -43,6 +45,8 @@ describe("OrdersService", () => {
   let prisma: MockPrisma;
   let tx: MockTx;
   let executeRawResult: number;
+  let shippingService: { syncStatus: AsyncMock<void> };
+  let notificationsService: { create: AsyncMock<Row> };
 
   beforeEach(() => {
     executeRawResult = 1; // reservation succeeds by default
@@ -78,7 +82,14 @@ describe("OrdersService", () => {
       $transaction: jest.fn((arg: unknown) => (typeof arg === "function" ? arg(tx) : Promise.resolve(arg))),
     };
 
-    service = new OrdersService(prisma as unknown as PrismaService);
+    shippingService = { syncStatus: jest.fn<AsyncFn<void>>().mockResolvedValue(undefined) };
+    notificationsService = { create: jest.fn<AsyncFn<Row>>().mockResolvedValue({ id: "notif-1" }) };
+
+    service = new OrdersService(
+      prisma as unknown as PrismaService,
+      shippingService as unknown as ShippingService,
+      notificationsService as unknown as NotificationsService,
+    );
   });
 
   describe("createFromCart", () => {
@@ -176,6 +187,7 @@ describe("OrdersService", () => {
       expect(tx.stockMovement.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ type: "RELEASE", quantity: 3 }) }),
       );
+      expect(notificationsService.create).toHaveBeenCalledWith("user-1", "ORDER", expect.any(String), expect.any(String));
     });
   });
 
@@ -188,11 +200,12 @@ describe("OrdersService", () => {
     });
 
     it("allows PENDING -> CONFIRMED and stamps confirmedAt", async () => {
-      prisma.order.findUnique.mockResolvedValue({ id: "order-1", status: "PENDING", items: [] });
+      prisma.order.findUnique.mockResolvedValue({ id: "order-1", userId: "user-1", status: "PENDING", items: [] });
       await service.updateStatusAdmin("order-1", { status: OrderStatus.CONFIRMED });
       expect(tx.order.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ status: "CONFIRMED", confirmedAt: expect.any(Date) }) }),
       );
+      expect(notificationsService.create).toHaveBeenCalledWith("user-1", "ORDER", expect.any(String), expect.any(String));
     });
 
     it("deducts currentStock and reservedStock together when transitioning to PACKED", async () => {
@@ -212,6 +225,7 @@ describe("OrdersService", () => {
       expect(tx.stockMovement.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ type: "DEDUCT", quantity: 4 }) }),
       );
+      expect(shippingService.syncStatus).toHaveBeenCalledWith(tx, "order-1", "PACKED");
     });
 
     it("releases (not restocks) when cancelling before fulfillment (e.g. from CONFIRMED)", async () => {
@@ -251,6 +265,7 @@ describe("OrdersService", () => {
     it("restocks currentStock when a delivered order is returned", async () => {
       prisma.order.findUnique.mockResolvedValue({
         id: "order-1",
+        userId: "user-1",
         status: "DELIVERED",
         items: [cartItemRow({ quantity: 1 })],
       });
@@ -260,6 +275,8 @@ describe("OrdersService", () => {
       expect(tx.inventory.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { currentStock: { increment: 1 } } }),
       );
+      expect(shippingService.syncStatus).toHaveBeenCalledWith(tx, "order-1", "RETURNED");
+      expect(notificationsService.create).toHaveBeenCalledWith("user-1", "SHIPMENT", expect.any(String), expect.any(String));
     });
 
     it("rejects transitioning a terminal RETURNED order any further (REFUNDED not reachable yet)", async () => {

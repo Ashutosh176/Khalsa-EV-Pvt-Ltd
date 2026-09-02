@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@khalsa-ev/ui";
 import { useAuth } from "../lib/auth-context";
 import { useCart } from "../lib/cart-context";
+import { useNotifications } from "../lib/notifications-context";
 
 export function Header() {
   const { user, logout } = useAuth();
   const { cart } = useCart();
+  const { unreadCount } = useNotifications();
   const router = useRouter();
 
   async function handleLogout() {
@@ -53,7 +55,7 @@ export function Header() {
                 href="/account"
                 className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-brand-green hover:text-brand-green"
               >
-                Account
+                Account{unreadCount > 0 ? ` (${unreadCount})` : ""}
               </Link>
               <button
                 type="button"

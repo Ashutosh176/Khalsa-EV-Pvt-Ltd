@@ -3,7 +3,15 @@ import { OrderStatus, Prisma, ProductStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
 import { generateOrderNumber } from "../common/order-number";
-import { ALLOWED_ORDER_TRANSITIONS, STOCK_DEDUCTED_AT_OR_AFTER } from "./order-status";
+import { ShippingService } from "../shipping/shipping.service";
+import type { UpdateShipmentDto } from "../shipping/dto/update-shipment.dto";
+import { NotificationsService } from "../notifications/notifications.service";
+import {
+  ALLOWED_ORDER_TRANSITIONS,
+  notificationTypeForOrderStatus,
+  ORDER_STATUS_LABELS,
+  STOCK_DEDUCTED_AT_OR_AFTER,
+} from "./order-status";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { ListOrdersQuery } from "./dto/list-orders.query";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
@@ -32,7 +40,11 @@ type TxClient = Prisma.TransactionClient;
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly shippingService: ShippingService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async createFromCart(userId: string, dto: CreateOrderDto) {
     const shippingAddress = await this.requireOwnedAddress(userId, dto.shippingAddressId);
@@ -187,6 +199,13 @@ export class OrdersService {
       });
     });
 
+    await this.notificationsService.create(
+      userId,
+      notificationTypeForOrderStatus(OrderStatus.CANCELLED),
+      `Order ${order.orderNumber} cancelled`,
+      `Your order ${order.orderNumber} has been cancelled.`,
+    );
+
     return this.findOne(userId, orderId);
   }
 
@@ -263,8 +282,22 @@ export class OrdersService {
       await tx.orderStatusHistory.create({
         data: { orderId: order.id, status: dto.status, note: dto.note },
       });
+      await this.shippingService.syncStatus(tx, order.id, dto.status);
     });
 
+    await this.notificationsService.create(
+      order.userId,
+      notificationTypeForOrderStatus(dto.status),
+      `Order ${order.orderNumber} ${ORDER_STATUS_LABELS[dto.status]}`,
+      `Your order ${order.orderNumber} is now ${ORDER_STATUS_LABELS[dto.status]}.`,
+    );
+
+    return this.findOneAdmin(orderId);
+  }
+
+  async updateShipmentAdmin(orderId: string, dto: UpdateShipmentDto) {
+    await this.findOneAdmin(orderId); // 404s if the order doesn't exist
+    await this.shippingService.updateTracking(orderId, dto);
     return this.findOneAdmin(orderId);
   }
 

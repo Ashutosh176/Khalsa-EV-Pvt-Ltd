@@ -209,6 +209,25 @@ export type OrderStatusHistoryEntry = {
   createdAt: string;
 };
 
+export type ShipmentStatusValue =
+  | "PENDING"
+  | "PACKED"
+  | "SHIPPED"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "FAILED"
+  | "RETURNED";
+
+export type ShipmentView = {
+  status: ShipmentStatusValue;
+  courierName: string | null;
+  awbNumber: string | null;
+  trackingUrl: string | null;
+  shippedAt: string | null;
+  expectedDeliveryAt: string | null;
+  deliveredAt: string | null;
+};
+
 export type OrderView = {
   id: string;
   orderNumber: string;
@@ -225,6 +244,7 @@ export type OrderView = {
   statusHistory: OrderStatusHistoryEntry[];
   shippingAddress: Address;
   billingAddress: Address | null;
+  shipment: ShipmentView | null;
 };
 
 export type ReturnStatusValue = "REQUESTED" | "APPROVED" | "REJECTED" | "PICKED_UP" | "RECEIVED" | "COMPLETED";
@@ -245,4 +265,15 @@ export type CreateReturnInput = {
   orderId: string;
   orderItemId?: string;
   reason: string;
+};
+
+export type NotificationTypeValue = "ORDER" | "PAYMENT" | "SHIPMENT" | "RETURN" | "SYSTEM";
+
+export type NotificationView = {
+  id: string;
+  type: NotificationTypeValue;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
 };

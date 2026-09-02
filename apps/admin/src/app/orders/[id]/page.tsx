@@ -1,12 +1,12 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, type FormEvent } from "react";
 import { formatIndianRupees } from "@khalsa-ev/utils";
 import { Button } from "@khalsa-ev/ui";
 import { AdminShell } from "../../../components/AdminShell";
 import { useAuth } from "../../../lib/auth-context";
-import { getAdminOrder, updateOrderStatus } from "../../../lib/api";
-import type { AdminOrderDetail, OrderStatus } from "../../../lib/types";
+import { getAdminOrder, updateOrderShipment, updateOrderStatus } from "../../../lib/api";
+import type { AdminOrderDetail, OrderStatus, ShipmentInfo } from "../../../lib/types";
 
 // Mirrors apps/api/src/orders/order-status.ts - kept in sync manually.
 // This only controls which buttons are shown; the backend is still the
@@ -174,6 +174,8 @@ function OrderDetailContent({ id }: { id: string }) {
               Phone: {order.shippingAddress.phone}
             </p>
           </section>
+
+          <ShipmentSection key={order.id} orderId={order.id} shipment={order.shipment} onSaved={setOrder} />
         </div>
 
         <section className="h-fit rounded-3xl border border-slate-200 bg-white p-6">
@@ -193,6 +195,102 @@ function OrderDetailContent({ id }: { id: string }) {
         </section>
       </div>
     </div>
+  );
+}
+
+function ShipmentSection({
+  orderId,
+  shipment,
+  onSaved,
+}: {
+  orderId: string;
+  shipment: ShipmentInfo | null;
+  onSaved: (order: AdminOrderDetail) => void;
+}) {
+  const { accessToken } = useAuth();
+  const [courierName, setCourierName] = useState(shipment?.courierName ?? "");
+  const [awbNumber, setAwbNumber] = useState(shipment?.awbNumber ?? "");
+  const [trackingUrl, setTrackingUrl] = useState(shipment?.trackingUrl ?? "");
+  const [expectedDeliveryAt, setExpectedDeliveryAt] = useState(
+    shipment?.expectedDeliveryAt ? shipment.expectedDeliveryAt.slice(0, 10) : "",
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!accessToken) return;
+    setError(null);
+    setSaving(true);
+    try {
+      const updated = await updateOrderShipment(accessToken, orderId, {
+        courierName: courierName || undefined,
+        awbNumber: awbNumber || undefined,
+        trackingUrl: trackingUrl || undefined,
+        expectedDeliveryAt: expectedDeliveryAt ? new Date(expectedDeliveryAt).toISOString() : undefined,
+      });
+      onSaved(updated);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save shipment details");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-6">
+      <h2 className="text-lg font-bold text-slate-900">Courier & tracking</h2>
+      <p className="mt-1 text-xs text-slate-400">
+        No Shiprocket credentials yet - entered manually. Shipment status ({shipment?.status ?? "PENDING"}) tracks the
+        order status above automatically.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+        {error ? <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-600">{error}</p> : null}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-xs font-medium text-slate-600">Courier name</span>
+            <input
+              value={courierName}
+              onChange={(e) => setCourierName(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-green"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-slate-600">AWB number</span>
+            <input
+              value={awbNumber}
+              onChange={(e) => setAwbNumber(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-green"
+            />
+          </label>
+        </div>
+
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">Tracking URL</span>
+          <input
+            value={trackingUrl}
+            onChange={(e) => setTrackingUrl(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-green"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">Expected delivery date</span>
+          <input
+            type="date"
+            value={expectedDeliveryAt}
+            onChange={(e) => setExpectedDeliveryAt(e.target.value)}
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-green"
+          />
+        </label>
+
+        <Button type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Save shipment details"}
+        </Button>
+      </form>
+    </section>
   );
 }
 

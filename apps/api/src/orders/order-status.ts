@@ -1,4 +1,4 @@
-import { OrderStatus } from "@prisma/client";
+import { NotificationType, OrderStatus } from "@prisma/client";
 
 // Section 14's lifecycle, plus Cancelled/Returned as branches. REFUNDED
 // is intentionally unreachable via this map for now - marking an order
@@ -31,4 +31,30 @@ export const STOCK_DEDUCTED_AT_OR_AFTER: OrderStatus[] = [
 
 export function isTransitionAllowed(from: OrderStatus, to: OrderStatus): boolean {
   return ALLOWED_ORDER_TRANSITIONS[from].includes(to);
+}
+
+// Human-readable status for customer-facing notification text.
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  [OrderStatus.PENDING]: "placed",
+  [OrderStatus.CONFIRMED]: "confirmed",
+  [OrderStatus.PROCESSING]: "being processed",
+  [OrderStatus.PACKED]: "packed",
+  [OrderStatus.SHIPPED]: "shipped",
+  [OrderStatus.OUT_FOR_DELIVERY]: "out for delivery",
+  [OrderStatus.DELIVERED]: "delivered",
+  [OrderStatus.CANCELLED]: "cancelled",
+  [OrderStatus.RETURNED]: "returned",
+  [OrderStatus.REFUNDED]: "refunded",
+};
+
+const SHIPMENT_STAGE_STATUSES: OrderStatus[] = [
+  OrderStatus.PACKED,
+  OrderStatus.SHIPPED,
+  OrderStatus.OUT_FOR_DELIVERY,
+  OrderStatus.DELIVERED,
+  OrderStatus.RETURNED,
+];
+
+export function notificationTypeForOrderStatus(status: OrderStatus): NotificationType {
+  return SHIPMENT_STAGE_STATUSES.includes(status) ? NotificationType.SHIPMENT : NotificationType.ORDER;
 }

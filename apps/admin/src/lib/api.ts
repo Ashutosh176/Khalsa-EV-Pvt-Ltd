@@ -11,6 +11,7 @@ import type {
   OrderStatus,
   PaginatedResult,
   UpdateProductInput,
+  UpdateShipmentInput,
   VehicleBrand,
   VehicleModel,
   VehicleVariant,
@@ -132,6 +133,13 @@ export function updateOrderStatus(accessToken: string, id: string, status: Order
   return authFetch<AdminOrderDetail>(`/admin/orders/${id}/status`, accessToken, {
     method: "PATCH",
     body: JSON.stringify({ status, note }),
+  });
+}
+
+export function updateOrderShipment(accessToken: string, id: string, dto: UpdateShipmentInput) {
+  return authFetch<AdminOrderDetail>(`/admin/orders/${id}/shipment`, accessToken, {
+    method: "PATCH",
+    body: JSON.stringify(dto),
   });
 }
 

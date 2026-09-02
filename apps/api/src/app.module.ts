@@ -14,6 +14,8 @@ import { AddressesModule } from "./addresses/addresses.module";
 import { OrdersModule } from "./orders/orders.module";
 import { InventoryModule } from "./inventory/inventory.module";
 import { ReturnsModule } from "./returns/returns.module";
+import { ShippingModule } from "./shipping/shipping.module";
+import { NotificationsModule } from "./notifications/notifications.module";
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { ReturnsModule } from "./returns/returns.module";
     OrdersModule,
     InventoryModule,
     ReturnsModule,
+    ShippingModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
 })

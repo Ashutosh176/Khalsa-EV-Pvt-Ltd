@@ -112,6 +112,25 @@ export type AdminOrderListItem = {
   items: OrderItemRow[];
 };
 
+export type ShipmentStatus = "PENDING" | "PACKED" | "SHIPPED" | "OUT_FOR_DELIVERY" | "DELIVERED" | "FAILED" | "RETURNED";
+
+export type ShipmentInfo = {
+  status: ShipmentStatus;
+  courierName: string | null;
+  awbNumber: string | null;
+  trackingUrl: string | null;
+  shippedAt: string | null;
+  expectedDeliveryAt: string | null;
+  deliveredAt: string | null;
+};
+
+export type UpdateShipmentInput = {
+  courierName?: string;
+  awbNumber?: string;
+  trackingUrl?: string;
+  expectedDeliveryAt?: string;
+};
+
 export type AdminOrderDetail = AdminOrderListItem & {
   subtotal: number;
   discountAmount: number;
@@ -121,6 +140,7 @@ export type AdminOrderDetail = AdminOrderListItem & {
   shippingAddress: AddressRow;
   billingAddress: AddressRow | null;
   statusHistory: OrderStatusHistoryEntry[];
+  shipment: ShipmentInfo | null;
 };
 
 export type AdminInventoryItem = {

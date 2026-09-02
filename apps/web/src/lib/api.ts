@@ -7,6 +7,7 @@ import type {
   Category,
   CreateReturnInput,
   CustomerUser,
+  NotificationView,
   OrderView,
   PaginatedResult,
   ReturnView,
@@ -231,4 +232,18 @@ export function getReturns(accessToken: string) {
 
 export function createReturn(accessToken: string, dto: CreateReturnInput) {
   return authFetch<ReturnView>("/returns", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+// --- Notifications ---
+
+export function getNotifications(accessToken: string) {
+  return authFetch<NotificationView[]>("/notifications", accessToken);
+}
+
+export function markNotificationRead(accessToken: string, id: string) {
+  return authFetch<{ status: string }>(`/notifications/${id}/read`, accessToken, { method: "PATCH" });
+}
+
+export function markAllNotificationsRead(accessToken: string) {
+  return authFetch<{ status: string }>("/notifications/read-all", accessToken, { method: "POST" });
 }

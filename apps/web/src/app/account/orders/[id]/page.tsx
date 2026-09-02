@@ -134,6 +134,29 @@ export default function OrderDetailPage() {
                     </ol>
                   </div>
 
+                  {order.shipment && (order.shipment.courierName || order.shipment.awbNumber) ? (
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6">
+                      <h3 className="font-bold text-brand-ink">Courier & tracking</h3>
+                      <div className="mt-3 space-y-1 text-sm text-slate-600">
+                        {order.shipment.courierName ? <p>Courier: {order.shipment.courierName}</p> : null}
+                        {order.shipment.awbNumber ? <p>AWB number: {order.shipment.awbNumber}</p> : null}
+                        {order.shipment.expectedDeliveryAt ? (
+                          <p>Expected delivery: {new Date(order.shipment.expectedDeliveryAt).toLocaleDateString("en-IN")}</p>
+                        ) : null}
+                        {order.shipment.trackingUrl ? (
+                          <a
+                            href={order.shipment.trackingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-block font-semibold text-brand-green"
+                          >
+                            Track shipment
+                          </a>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="rounded-3xl border border-slate-200 bg-white p-6">
                     <h3 className="font-bold text-brand-ink">Items</h3>
                     <div className="mt-4 divide-y divide-slate-100">
