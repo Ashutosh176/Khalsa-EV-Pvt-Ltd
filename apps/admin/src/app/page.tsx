@@ -37,7 +37,6 @@ export default function AdminHomePage() {
             <a href="#overview">Overview</a>
             <a href="#orders">Orders</a>
             <a href="#inventory">Inventory</a>
-            <a href="#customers">Customers</a>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -61,7 +60,7 @@ export default function AdminHomePage() {
         </div>
 
         <div className="mt-8 grid gap-6 xl:grid-cols-[1.5fr_0.8fr]">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <section id="orders" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-5 flex items-center justify-between gap-4">
               <h3 className="text-xl font-bold text-slate-900">Recent orders</h3>
               <Button variant="ghost">View all</Button>

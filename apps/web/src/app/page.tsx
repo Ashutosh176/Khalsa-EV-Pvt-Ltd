@@ -27,6 +27,12 @@ const testimonials = [
   { quote: "Clear compatibility checks saved me time and took the guesswork out of my battery upgrade.", author: "Raman P., Chandigarh" },
 ];
 
+const offers = [
+  { title: "Flat 10% off batteries", text: "On all Li-Ion and LFP battery packs this week.", code: "BATTERY10" },
+  { title: "Free shipping over ₹2,999", text: "Applies automatically at checkout on eligible orders.", code: "FREESHIP" },
+  { title: "Bundle & save on brake kits", text: "Buy a brake disc set with pads and save 8%.", code: "BRAKEBUNDLE" },
+];
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50 text-brand-ink">
@@ -198,6 +204,26 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section id="offers" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <SectionHeading
+          eyebrow="Offers & promotions"
+          title="Current deals for EV owners"
+          description="Seasonal offers and bundle discounts, applied automatically or with a code at checkout."
+        />
+
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {offers.map((offer) => (
+            <div key={offer.title} className="rounded-3xl border border-dashed border-brand-green/40 bg-brand-green/5 p-7">
+              <h3 className="text-lg font-bold text-brand-ink">{offer.title}</h3>
+              <p className="mt-3 text-slate-600">{offer.text}</p>
+              <div className="mt-5 inline-flex rounded-full bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-brand-green ring-1 ring-brand-green/30">
+                {offer.code}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <SectionHeading
@@ -276,9 +302,9 @@ export default function HomePage() {
           <div>
             <div className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">Reach us</div>
             <ul className="mt-4 space-y-2 text-slate-300">
-              <li>+91 18001210259</li>
-              <li>info@khalsaev.com</li>
-              <li>Muzaffarnagar, UP</li>
+              <li>Toll Free: 18001210259</li>
+              <li>infor@khalsaev.com</li>
+              <li>Plot no. 130/1 and 130/2, Pachenda Road, Village Mustafabad, Muzaffarnagar, UP - 251001</li>
             </ul>
           </div>
         </div>
