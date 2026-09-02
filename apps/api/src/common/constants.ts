@@ -1,0 +1,1 @@
+export const DEFAULT_WAREHOUSE_CODE = "MAIN";

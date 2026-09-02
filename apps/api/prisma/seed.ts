@@ -3,6 +3,8 @@ import { config } from "dotenv";
 import { hash } from "bcrypt";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Role } from "@prisma/client";
+import { slugify } from "@khalsa-ev/utils";
+import { DEFAULT_WAREHOUSE_CODE } from "../src/common/constants";
 
 config({ path: path.resolve(__dirname, "../../../.env") });
 
@@ -26,10 +28,6 @@ const CATEGORIES = [
   "Accessories",
   "Electric Scooters",
 ];
-
-function slugify(value: string): string {
-  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
 
 async function seedSuperAdmin() {
   const email = process.env.ADMIN_SEED_EMAIL;
@@ -69,9 +67,19 @@ async function seedCategories() {
   console.log(`Ensured ${CATEGORIES.length} base categories exist.`);
 }
 
+async function seedDefaultWarehouse() {
+  await prisma.warehouse.upsert({
+    where: { code: DEFAULT_WAREHOUSE_CODE },
+    update: {},
+    create: { code: DEFAULT_WAREHOUSE_CODE, name: "Main Warehouse" },
+  });
+  console.log(`Ensured default warehouse "${DEFAULT_WAREHOUSE_CODE}" exists.`);
+}
+
 async function main() {
   await seedSuperAdmin();
   await seedCategories();
+  await seedDefaultWarehouse();
 }
 
 main()
