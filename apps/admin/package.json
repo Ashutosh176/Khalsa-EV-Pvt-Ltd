@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@khalsa-ev/types": "workspace:*",
     "@khalsa-ev/ui": "workspace:*",
+    "@khalsa-ev/utils": "workspace:*",
     "next": "^16.3.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
