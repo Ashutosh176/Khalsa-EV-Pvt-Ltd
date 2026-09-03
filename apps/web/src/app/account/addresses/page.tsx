@@ -106,108 +106,106 @@ export default function AddressesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-black tracking-tight text-brand-ink">My account</h1>
-
+      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-600">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green">
+          <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+            <p className="text-brand-sub">Log in to view your account.</p>
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
               Log in
             </Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[220px_1fr]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <AccountNav />
 
-            <div className="space-y-6">
+            <div className="flex-1 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-brand-ink">Addresses</h2>
+                <h1 className="text-[18px] font-bold">Addresses</h1>
                 <Button onClick={startCreate}>Add address</Button>
               </div>
 
               {showForm ? (
-                <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
+                <form onSubmit={handleSubmit} className="space-y-3.5 rounded-[10px] border border-brand-line p-4">
                   {error ? (
-                    <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
+                    <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
                       {error}
                     </p>
                   ) : null}
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-3.5 sm:grid-cols-2">
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">Full name</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">Full name</span>
                       <input
                         required
                         value={form.fullName}
                         onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">Phone</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">Phone</span>
                       <input
                         required
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       />
                     </label>
                   </div>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Address line 1</span>
+                    <span className="text-[12.5px] font-medium text-brand-sub">Address line 1</span>
                     <input
                       required
                       value={form.line1}
                       onChange={(e) => setForm({ ...form, line1: e.target.value })}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                      className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                     />
                   </label>
 
                   <label className="block">
-                    <span className="text-sm font-medium text-slate-700">Address line 2 (optional)</span>
+                    <span className="text-[12.5px] font-medium text-brand-sub">Address line 2 (optional)</span>
                     <input
                       value={form.line2}
                       onChange={(e) => setForm({ ...form, line2: e.target.value })}
-                      className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                      className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                     />
                   </label>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="grid gap-3.5 sm:grid-cols-3">
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">City</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">City</span>
                       <input
                         required
                         value={form.city}
                         onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">State</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">State</span>
                       <input
                         required
                         value={form.state}
                         onChange={(e) => setForm({ ...form, state: e.target.value })}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">Postal code</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">Postal code</span>
                       <input
                         required
                         value={form.postalCode}
                         onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       />
                     </label>
                   </div>
 
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <label className="flex items-center gap-2 text-[12.5px] text-brand-sub">
                     <input
                       type="checkbox"
                       checked={form.isDefault ?? false}
@@ -228,40 +226,40 @@ export default function AddressesPage() {
               ) : null}
 
               {addresses === null ? (
-                <p className="text-sm text-slate-500">Loading addresses...</p>
+                <p className="text-sm text-brand-sub">Loading addresses...</p>
               ) : addresses.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-                  <p className="text-slate-600">You haven&apos;t saved any addresses yet.</p>
+                <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+                  <p className="text-brand-sub">You haven&apos;t saved any addresses yet.</p>
                 </div>
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3.5 sm:grid-cols-2">
                   {addresses.map((address) => (
-                    <div key={address.id} className="rounded-3xl border border-slate-200 bg-white p-5">
+                    <div key={address.id} className="rounded-[10px] border border-brand-line p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-bold text-brand-ink">{address.fullName}</p>
-                          <p className="text-sm text-slate-500">{address.phone}</p>
+                          <p className="text-[13.5px] font-bold">{address.fullName}</p>
+                          <p className="text-[12.5px] text-brand-sub">{address.phone}</p>
                         </div>
                         {address.isDefault ? (
-                          <span className="rounded-full bg-brand-green/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-green">
+                          <span className="rounded-[4px] bg-brand-green-light px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-green-dark">
                             Default
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-3 text-sm text-slate-600">
+                      <p className="mt-2.5 text-[12.5px] text-brand-sub">
                         {address.line1}
                         {address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state} {address.postalCode}
                       </p>
-                      <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
-                        <button type="button" onClick={() => startEdit(address)} className="text-brand-green">
+                      <div className="mt-3 flex flex-wrap gap-3.5 text-[12px] font-semibold">
+                        <button type="button" onClick={() => startEdit(address)} className="text-brand-green-dark">
                           Edit
                         </button>
                         {!address.isDefault ? (
-                          <button type="button" onClick={() => handleSetDefault(address)} className="text-slate-600">
+                          <button type="button" onClick={() => handleSetDefault(address)} className="text-brand-sub">
                             Set as default
                           </button>
                         ) : null}
-                        <button type="button" onClick={() => handleDelete(address.id)} className="text-red-500">
+                        <button type="button" onClick={() => handleDelete(address.id)} className="text-brand-red">
                           Delete
                         </button>
                       </div>

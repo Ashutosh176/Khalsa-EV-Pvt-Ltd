@@ -14,26 +14,24 @@ export default function ProfilePage() {
   const { user, accessToken, loading: authLoading, setUser } = useAuth();
 
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-black tracking-tight text-brand-ink">My account</h1>
-
+      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {authLoading ? (
-          <p className="mt-8 text-sm text-slate-500">Loading...</p>
+          <p className="text-sm text-brand-sub">Loading...</p>
         ) : !user || !accessToken ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-600">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green">
+          <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+            <p className="text-brand-sub">Log in to view your account.</p>
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
               Log in
             </Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[220px_1fr]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <AccountNav />
 
-            <div className="space-y-6">
+            <div className="flex-1 space-y-4">
               <ProfileForm key={user.id} user={user} accessToken={accessToken} setUser={setUser} />
               <PasswordForm accessToken={accessToken} />
             </div>
@@ -78,45 +76,45 @@ function ProfileForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-bold text-brand-ink">Profile</h2>
+    <form onSubmit={handleSubmit} className="space-y-3.5 rounded-[10px] border border-brand-line p-4">
+      <b className="text-[15px]">Profile</b>
 
       {error ? (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
+        <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
           {error}
         </p>
       ) : null}
       {success ? (
-        <p className="rounded-xl bg-brand-green/10 px-4 py-3 text-sm text-brand-green" role="status">
+        <p className="rounded-[7px] bg-brand-green-light px-4 py-2.5 text-[12.5px] text-brand-green-dark" role="status">
           Profile updated.
         </p>
       ) : null}
 
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">Name</span>
+        <span className="text-[12.5px] font-medium text-brand-sub">Name</span>
         <input
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
         />
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">Phone</span>
+        <span className="text-[12.5px] font-medium text-brand-sub">Phone</span>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
         />
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">Email</span>
+        <span className="text-[12.5px] font-medium text-brand-sub">Email</span>
         <input
           disabled
           value={user.email}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-400"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line bg-brand-surface px-3.5 py-2.5 text-[13px] text-brand-sub"
         />
       </label>
 
@@ -152,40 +150,40 @@ function PasswordForm({ accessToken }: { accessToken: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
-      <h2 className="text-lg font-bold text-brand-ink">Change password</h2>
+    <form onSubmit={handleSubmit} className="space-y-3.5 rounded-[10px] border border-brand-line p-4">
+      <b className="text-[15px]">Change password</b>
 
       {error ? (
-        <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
+        <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
           {error}
         </p>
       ) : null}
       {success ? (
-        <p className="rounded-xl bg-brand-green/10 px-4 py-3 text-sm text-brand-green" role="status">
+        <p className="rounded-[7px] bg-brand-green-light px-4 py-2.5 text-[12.5px] text-brand-green-dark" role="status">
           Password changed.
         </p>
       ) : null}
 
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">Current password</span>
+        <span className="text-[12.5px] font-medium text-brand-sub">Current password</span>
         <input
           required
           type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
         />
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-slate-700">New password</span>
+        <span className="text-[12.5px] font-medium text-brand-sub">New password</span>
         <input
           required
           minLength={8}
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
         />
       </label>
 

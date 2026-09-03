@@ -25,6 +25,18 @@ const STATUS_LABELS: Record<string, string> = {
   REFUNDED: "Refunded",
 };
 
+const STATUS_STYLES: Record<string, string> = {
+  DELIVERED: "bg-[#E8F7EA] text-[#1F8A3B]",
+  PACKED: "bg-[#FFF3DF] text-[#B9770E]",
+  SHIPPED: "bg-[#FFF3DF] text-[#B9770E]",
+  OUT_FOR_DELIVERY: "bg-[#FFF3DF] text-[#B9770E]",
+  CANCELLED: "bg-[#FDE8E7] text-[#D93429]",
+  RETURNED: "bg-[#FDE8E7] text-[#D93429]",
+  PENDING: "bg-[#E7F0FE] text-[#2563C6]",
+  CONFIRMED: "bg-[#E7F0FE] text-[#2563C6]",
+  PROCESSING: "bg-[#E7F0FE] text-[#2563C6]",
+};
+
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
   const { user, accessToken, loading: authLoading } = useAuth();
@@ -62,69 +74,67 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-black tracking-tight text-brand-ink">My account</h1>
-
+      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-600">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green">
+          <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+            <p className="text-brand-sub">Log in to view your account.</p>
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
               Log in
             </Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[220px_1fr]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <AccountNav />
 
-            <div className="space-y-6">
-              <Link href="/account/orders" className="text-sm font-semibold text-brand-green">
+            <div className="flex-1 space-y-4">
+              <Link href="/account/orders" className="text-[12.5px] font-semibold text-brand-green-dark">
                 &larr; Back to orders
               </Link>
 
               {notFound ? (
-                <p className="text-sm text-slate-500">Order not found.</p>
+                <p className="text-sm text-brand-sub">Order not found.</p>
               ) : order === null ? (
-                <p className="text-sm text-slate-500">Loading order...</p>
+                <p className="text-sm text-brand-sub">Loading order...</p>
               ) : (
                 <>
-                  <div className="rounded-3xl border border-slate-200 bg-white p-6">
+                  <div className="rounded-[10px] border border-brand-line p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <h2 className="text-lg font-bold text-brand-ink">{order.orderNumber}</h2>
-                        <p className="text-sm text-slate-500">
+                        <b className="text-[15px]">{order.orderNumber}</b>
+                        <p className="text-[12.5px] text-brand-sub">
                           Placed {new Date(order.placedAt).toLocaleDateString("en-IN")}
                         </p>
                       </div>
-                      <span className="rounded-full bg-brand-green/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-brand-green">
+                      <span className={`rounded-full px-3 py-1 text-[10.5px] font-bold ${STATUS_STYLES[order.status] ?? "bg-slate-100 text-slate-600"}`}>
                         {STATUS_LABELS[order.status] ?? order.status}
                       </span>
                     </div>
 
                     {order.status === "PENDING" ? (
-                      <div className="mt-4">
-                        {cancelError ? <p className="mb-2 text-sm text-red-600">{cancelError}</p> : null}
+                      <div className="mt-3.5">
+                        {cancelError ? <p className="mb-2 text-[12.5px] text-brand-red">{cancelError}</p> : null}
                         <Button variant="secondary" onClick={handleCancel} disabled={cancelling}>
                           {cancelling ? "Cancelling..." : "Cancel order"}
                         </Button>
                       </div>
                     ) : null}
                     {order.status === "CANCELLED" && order.cancellationReason ? (
-                      <p className="mt-4 text-sm text-slate-500">Reason: {order.cancellationReason}</p>
+                      <p className="mt-3.5 text-[12.5px] text-brand-sub">Reason: {order.cancellationReason}</p>
                     ) : null}
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                    <h3 className="font-bold text-brand-ink">Status timeline</h3>
-                    <ol className="mt-4 space-y-3">
+                  <div className="rounded-[10px] border border-brand-line p-4">
+                    <b className="text-[13.5px]">Status timeline</b>
+                    <ol className="mt-3.5 space-y-3">
                       {order.statusHistory.map((entry) => (
-                        <li key={entry.id} className="flex items-start gap-3 text-sm">
+                        <li key={entry.id} className="flex items-start gap-2.5 text-[12.5px]">
                           <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" />
                           <div>
-                            <p className="font-semibold text-brand-ink">{STATUS_LABELS[entry.status] ?? entry.status}</p>
-                            <p className="text-xs text-slate-400">
+                            <p className="font-bold">{STATUS_LABELS[entry.status] ?? entry.status}</p>
+                            <p className="text-xs text-brand-sub">
                               {new Date(entry.createdAt).toLocaleString("en-IN")}
                               {entry.note ? ` · ${entry.note}` : ""}
                             </p>
@@ -135,9 +145,9 @@ export default function OrderDetailPage() {
                   </div>
 
                   {order.shipment && (order.shipment.courierName || order.shipment.awbNumber) ? (
-                    <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                      <h3 className="font-bold text-brand-ink">Courier & tracking</h3>
-                      <div className="mt-3 space-y-1 text-sm text-slate-600">
+                    <div className="rounded-[10px] border border-brand-line p-4">
+                      <b className="text-[13.5px]">Courier & tracking</b>
+                      <div className="mt-2.5 space-y-1 text-[12.5px] text-brand-sub">
                         {order.shipment.courierName ? <p>Courier: {order.shipment.courierName}</p> : null}
                         {order.shipment.awbNumber ? <p>AWB number: {order.shipment.awbNumber}</p> : null}
                         {order.shipment.expectedDeliveryAt ? (
@@ -148,7 +158,7 @@ export default function OrderDetailPage() {
                             href={order.shipment.trackingUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-block font-semibold text-brand-green"
+                            className="inline-block font-semibold text-brand-green-dark"
                           >
                             Track shipment
                           </a>
@@ -157,41 +167,41 @@ export default function OrderDetailPage() {
                     </div>
                   ) : null}
 
-                  <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                    <h3 className="font-bold text-brand-ink">Items</h3>
-                    <div className="mt-4 divide-y divide-slate-100">
+                  <div className="rounded-[10px] border border-brand-line p-4">
+                    <b className="text-[13.5px]">Items</b>
+                    <div className="mt-3 divide-y divide-brand-line">
                       {order.items.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                        <div key={item.id} className="flex items-center justify-between gap-4 py-2.5 text-[12.5px]">
                           <div>
-                            <p className="font-semibold text-brand-ink">{item.productNameSnapshot}</p>
-                            <p className="text-xs text-slate-400">
+                            <p className="font-bold">{item.productNameSnapshot}</p>
+                            <p className="text-xs text-brand-sub">
                               SKU: {item.skuSnapshot} &middot; Qty: {item.quantity}
                             </p>
                           </div>
-                          <p className="font-semibold">{formatIndianRupees(item.totalAmount)}</p>
+                          <p className="font-bold">{formatIndianRupees(item.totalAmount)}</p>
                         </div>
                       ))}
                     </div>
 
-                    <div className="mt-4 space-y-1 border-t border-slate-100 pt-4 text-sm">
-                      <div className="flex justify-between text-slate-500">
+                    <div className="mt-3.5 space-y-1 border-t border-brand-line pt-3.5 text-[12.5px]">
+                      <div className="flex justify-between text-brand-sub">
                         <span>Subtotal</span>
                         <span>{formatIndianRupees(order.subtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-slate-500">
+                      <div className="flex justify-between text-brand-sub">
                         <span>Shipping</span>
                         <span>{order.shippingAmount === 0 ? "Free" : formatIndianRupees(order.shippingAmount)}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-brand-ink">
+                      <div className="flex justify-between text-[14px] font-extrabold">
                         <span>Total</span>
                         <span>{formatIndianRupees(order.totalAmount)}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                    <h3 className="font-bold text-brand-ink">Shipping address</h3>
-                    <p className="mt-2 text-sm text-slate-600">
+                  <div className="rounded-[10px] border border-brand-line p-4">
+                    <b className="text-[13.5px]">Shipping address</b>
+                    <p className="mt-2 text-[12.5px] text-brand-sub">
                       {order.shippingAddress.fullName} &middot; {order.shippingAddress.phone}
                       <br />
                       {order.shippingAddress.line1}
@@ -203,7 +213,7 @@ export default function OrderDetailPage() {
                   {order.status === "DELIVERED" ? (
                     <Link
                       href={`/account/returns?orderId=${order.id}`}
-                      className="inline-block text-sm font-semibold text-brand-green"
+                      className="inline-block text-[12.5px] font-semibold text-brand-green-dark"
                     >
                       Request a return for this order
                     </Link>

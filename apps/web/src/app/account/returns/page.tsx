@@ -83,45 +83,43 @@ function ReturnsPageInner() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-black tracking-tight text-brand-ink">My account</h1>
-
+      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-600">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green">
+          <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+            <p className="text-brand-sub">Log in to view your account.</p>
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
               Log in
             </Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[220px_1fr]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <AccountNav />
 
-            <div className="space-y-6">
-              <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                <h2 className="text-lg font-bold text-brand-ink">Request a return</h2>
-                <p className="mt-1 text-sm text-slate-500">Only delivered orders are eligible for a return.</p>
+            <div className="flex-1 space-y-4">
+              <div className="rounded-[10px] border border-brand-line p-4">
+                <b className="text-[15px]">Request a return</b>
+                <p className="mt-1 text-[12.5px] text-brand-sub">Only delivered orders are eligible for a return.</p>
 
                 {deliveredOrders.length === 0 && orders !== null ? (
-                  <p className="mt-4 text-sm text-slate-500">You don&apos;t have any delivered orders to return.</p>
+                  <p className="mt-3.5 text-[12.5px] text-brand-sub">You don&apos;t have any delivered orders to return.</p>
                 ) : (
-                  <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+                  <form onSubmit={handleSubmit} className="mt-3.5 space-y-3.5">
                     {error ? (
-                      <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
+                      <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
                         {error}
                       </p>
                     ) : null}
                     {success ? (
-                      <p className="rounded-xl bg-brand-green/10 px-4 py-3 text-sm text-brand-green" role="status">
+                      <p className="rounded-[7px] bg-brand-green-light px-4 py-2.5 text-[12.5px] text-brand-green-dark" role="status">
                         Return request submitted.
                       </p>
                     ) : null}
 
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">Order</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">Order</span>
                       <select
                         required
                         value={orderId}
@@ -129,7 +127,7 @@ function ReturnsPageInner() {
                           setOrderId(e.target.value);
                           setOrderItemId("");
                         }}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       >
                         <option value="" disabled>
                           Select a delivered order
@@ -144,11 +142,11 @@ function ReturnsPageInner() {
 
                     {selectedOrder ? (
                       <label className="block">
-                        <span className="text-sm font-medium text-slate-700">Item (optional - leave blank for whole order)</span>
+                        <span className="text-[12.5px] font-medium text-brand-sub">Item (optional - leave blank for whole order)</span>
                         <select
                           value={orderItemId}
                           onChange={(e) => setOrderItemId(e.target.value)}
-                          className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                         >
                           <option value="">Whole order</option>
                           {selectedOrder.items.map((item) => (
@@ -161,14 +159,14 @@ function ReturnsPageInner() {
                     ) : null}
 
                     <label className="block">
-                      <span className="text-sm font-medium text-slate-700">Reason</span>
+                      <span className="text-[12.5px] font-medium text-brand-sub">Reason</span>
                       <textarea
                         required
                         minLength={3}
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={3}
-                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
                       />
                     </label>
 
@@ -179,22 +177,22 @@ function ReturnsPageInner() {
                 )}
               </div>
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-6">
-                <h2 className="text-lg font-bold text-brand-ink">Your return requests</h2>
+              <div className="rounded-[10px] border border-brand-line p-4">
+                <b className="text-[15px]">Your return requests</b>
 
                 {returns === null ? (
-                  <p className="mt-4 text-sm text-slate-500">Loading...</p>
+                  <p className="mt-3.5 text-[12.5px] text-brand-sub">Loading...</p>
                 ) : returns.length === 0 ? (
-                  <p className="mt-4 text-sm text-slate-500">No return requests yet.</p>
+                  <p className="mt-3.5 text-[12.5px] text-brand-sub">No return requests yet.</p>
                 ) : (
-                  <div className="mt-4 divide-y divide-slate-100">
+                  <div className="mt-3.5 divide-y divide-brand-line">
                     {returns.map((r) => (
-                      <div key={r.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                      <div key={r.id} className="flex items-center justify-between gap-4 py-2.5 text-[12.5px]">
                         <div>
-                          <p className="font-semibold text-brand-ink">{r.order.orderNumber}</p>
-                          <p className="text-xs text-slate-400">{r.reason}</p>
+                          <p className="font-bold">{r.order.orderNumber}</p>
+                          <p className="text-xs text-brand-sub">{r.reason}</p>
                         </div>
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-slate-600">
                           {r.status}
                         </span>
                       </div>

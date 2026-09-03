@@ -6,17 +6,22 @@ import { formatIndianRupees } from "@khalsa-ev/utils";
 import type { WishlistItemView } from "@khalsa-ev/types";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
+import { AccountNav } from "../../components/AccountNav";
 import { useAuth } from "../../lib/auth-context";
 import { useCart } from "../../lib/cart-context";
 import { getWishlist, moveWishlistItemToCart, removeWishlistItem } from "../../lib/api";
+
+const TIPS = [
+  ["♡", "Save Your Favorites", "Items in your wishlist are safe and easy to access anytime."],
+  ["🛡️", "Easy & Secure", "Add items to cart and enjoy secure checkout."],
+];
 
 export default function WishlistPage() {
   const { user, accessToken, loading: authLoading } = useAuth();
   const { refresh: refreshCart } = useCart();
   const [itemsState, setItems] = useState<WishlistItemView[] | null>(null);
-  // Derived, not cleared via setState, so the effect below never needs
-  // a synchronous setState branch for the logged-out case.
   const items = accessToken ? itemsState : null;
+  const [movingAll, setMovingAll] = useState(false);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -45,65 +50,141 @@ export default function WishlistPage() {
     void refreshCart();
   }
 
+  async function handleMoveAllToCart() {
+    if (!accessToken || !items) return;
+    setMovingAll(true);
+    try {
+      for (const item of items.filter((i) => i.product.inStock)) {
+        await moveWishlistItemToCart(accessToken, item.id);
+      }
+      setItems(await getWishlist(accessToken));
+      void refreshCart();
+    } finally {
+      setMovingAll(false);
+    }
+  }
+
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-black tracking-tight text-brand-ink">Your wishlist</h1>
-
+      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-600">Log in to view and manage your wishlist.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green">
+          <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+            <p className="text-brand-sub">Log in to view and manage your wishlist.</p>
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
               Log in
             </Link>
           </div>
-        ) : items === null ? (
-          <p className="mt-8 text-sm text-slate-500">Loading your wishlist...</p>
-        ) : items.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-            <p className="text-slate-600">Your wishlist is empty.</p>
-            <Link href="/products" className="mt-4 inline-block font-semibold text-brand-green">
-              Browse products
-            </Link>
-          </div>
         ) : (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((item) => (
-              <div key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5">
-                <Link href={`/products/${item.product.slug}`} className="font-bold text-brand-ink hover:text-brand-green">
-                  {item.product.name}
-                </Link>
-                <p className="mt-1 text-xs text-slate-400">SKU: {item.product.sku}</p>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="text-lg font-black text-brand-ink">{formatIndianRupees(item.product.price)}</span>
-                  {item.product.mrp > item.product.price ? (
-                    <span className="text-sm text-slate-400 line-through">{formatIndianRupees(item.product.mrp)}</span>
-                  ) : null}
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+            <AccountNav />
+
+            <div className="flex-1">
+              <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h1 className="text-[23px] font-bold">My Wishlist {items ? `(${items.length})` : ""}</h1>
+                  <p className="text-[13px] text-brand-sub">Save items you love and buy them later.</p>
                 </div>
-                <p className={`mt-1 text-xs font-semibold ${item.product.inStock ? "text-brand-green" : "text-red-500"}`}>
-                  {item.product.inStock ? "In stock" : "Out of stock"}
-                </p>
-                <div className="mt-4 flex gap-3">
+                {items && items.length > 0 ? (
                   <button
                     type="button"
-                    onClick={() => handleMoveToCart(item.id)}
-                    disabled={!item.product.inStock}
-                    className="flex-1 rounded-full bg-brand-green px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2f8c13] disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={handleMoveAllToCart}
+                    disabled={movingAll}
+                    className="rounded-[7px] bg-brand-green px-[18px] py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-green-dark disabled:opacity-50"
                   >
-                    Move to cart
+                    {movingAll ? "Moving..." : "🛒 Move All to Cart"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(item.id)}
-                    className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:border-red-300 hover:text-red-500"
-                  >
-                    Remove
-                  </button>
-                </div>
+                ) : null}
               </div>
-            ))}
+
+              {items === null ? (
+                <p className="text-sm text-brand-sub">Loading your wishlist...</p>
+              ) : items.length === 0 ? (
+                <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
+                  <p className="text-brand-sub">Your wishlist is empty.</p>
+                  <Link href="/products" className="mt-4 inline-block font-semibold text-brand-green-dark">
+                    Browse products
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {items.map((item) => {
+                    const discountPercent =
+                      item.product.mrp > item.product.price
+                        ? Math.round((1 - item.product.price / item.product.mrp) * 100)
+                        : 0;
+                    return (
+                      <div key={item.id} className="flex flex-wrap items-center gap-4 rounded-[10px] border border-brand-line p-4">
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-brand-line bg-gradient-to-br from-[#F2F4F1] to-[#E4E9E3]">
+                          {item.product.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- product images are remote
+                            <img src={item.product.imageUrl} alt={item.product.name} className="h-full w-full rounded-lg object-cover" />
+                          ) : (
+                            <span className="text-3xl">🔧</span>
+                          )}
+                        </div>
+                        <div className="min-w-[200px] flex-1">
+                          <Link href={`/products/${item.product.slug}`} className="text-[13.5px] font-bold hover:text-brand-green-dark">
+                            {item.product.name}
+                          </Link>
+                          <div className="my-1">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                item.product.inStock ? "bg-brand-green-light text-brand-green-dark" : "bg-red-50 text-brand-red"
+                              }`}
+                            >
+                              {item.product.inStock ? "In Stock" : "Out of stock"}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-[15px] font-extrabold">{formatIndianRupees(item.product.price)}</span>
+                            {discountPercent > 0 ? (
+                              <>
+                                <span className="text-[11.5px] text-brand-sub line-through">{formatIndianRupees(item.product.mrp)}</span>
+                                <span className="text-[11px] font-bold text-brand-red">{discountPercent}% OFF</span>
+                              </>
+                            ) : null}
+                          </div>
+                          <div className="mt-1.5 flex gap-3.5 text-[11.5px]">
+                            <button type="button" onClick={() => handleRemove(item.id)} className="text-brand-red">
+                              🗑 Remove
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 flex-col gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleMoveToCart(item.id)}
+                            disabled={!item.product.inStock}
+                            className="rounded-[7px] border border-brand-green px-[18px] py-2 text-[13px] font-semibold text-brand-green-dark disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            🛒 Move to Cart
+                          </button>
+                          <Link
+                            href={`/products/${item.product.slug}`}
+                            className="rounded-[7px] border border-brand-green px-[18px] py-2 text-center text-[13px] font-semibold text-brand-green-dark"
+                          >
+                            View Details
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="lg:w-[220px] lg:shrink-0">
+              {TIPS.map(([icon, title, text]) => (
+                <div key={title} className="mb-3 rounded-[10px] border border-brand-line p-3.5 text-[11.5px]">
+                  <span className="text-lg">{icon}</span>
+                  <br />
+                  <b>{title}</b>
+                  <p className="mt-1 text-brand-sub">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
