@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CatalogProductCard } from "@khalsa-ev/ui";
 import type { CatalogProduct, VehicleBrand, VehicleModel, VehicleVariant } from "@khalsa-ev/types";
 import { getCatalogProducts, getVehicleBrands, getVehicleModels, getVehicleVariants } from "../../lib/api";
 
 export function FindPartsFinder() {
+  const searchParams = useSearchParams();
   const [brands, setBrands] = useState<VehicleBrand[]>([]);
   const [models, setModels] = useState<VehicleModel[]>([]);
   const [variants, setVariants] = useState<VehicleVariant[]>([]);
@@ -34,6 +36,18 @@ export function FindPartsFinder() {
       .then(setModels)
       .catch(() => setModels([]));
   }
+
+  useEffect(() => {
+    // Preselects the vehicle brand deep-linked from the homepage's "shop
+    // by vehicle" tiles (/find-parts?brandId=...) - a one-time sync from
+    // the URL on mount, no better construct available than an effect.
+    const initialBrandId = searchParams.get("brandId");
+    if (initialBrandId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleBrandChange(initialBrandId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleModelChange(nextModelId: string) {
     setModelId(nextModelId);

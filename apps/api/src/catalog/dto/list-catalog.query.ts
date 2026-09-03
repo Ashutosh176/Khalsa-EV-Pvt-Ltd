@@ -1,5 +1,5 @@
-import { Type } from "class-transformer";
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 const SORT_OPTIONS = ["newest", "price_asc", "price_desc"] as const;
 export type CatalogSort = (typeof SORT_OPTIONS)[number];
@@ -49,4 +49,12 @@ export class ListCatalogQuery {
   @IsOptional()
   @IsIn(SORT_OPTIONS)
   sort?: CatalogSort;
+
+  // @Type(() => Boolean) would coerce the literal string "false" to
+  // `true` (any non-empty string is JS-truthy) - see the identical bug
+  // fixed in ListInventoryQuery.lowStockOnly.
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === "true")
+  @IsBoolean()
+  featured?: boolean;
 }

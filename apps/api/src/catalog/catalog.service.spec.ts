@@ -97,5 +97,18 @@ describe("CatalogService", () => {
         }),
       );
     });
+
+    it("filters to isFeatured: true when featured is requested", async () => {
+      await service.findAll({ featured: true });
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ isFeatured: true }) }),
+      );
+    });
+
+    it("does not filter by isFeatured when featured is omitted or false", async () => {
+      await service.findAll({ featured: false });
+      const [[args]] = prisma.product.findMany.mock.calls as [[{ where: Record<string, unknown> }]];
+      expect(args.where).not.toHaveProperty("isFeatured");
+    });
   });
 });

@@ -69,9 +69,10 @@ export type CatalogFilters = {
   sort?: "newest" | "price_asc" | "price_desc";
   page?: number;
   pageSize?: number;
+  featured?: boolean;
 };
 
-function toQueryString(params: Record<string, string | number | undefined>): string {
+function toQueryString(params: Record<string, string | number | boolean | undefined>): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== "") search.set(key, String(value));

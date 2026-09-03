@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { FindPartsFinder } from "./FindPartsFinder";
@@ -21,7 +22,9 @@ export default function FindPartsPage() {
           Select your vehicle brand, model, and variant to see every spare part we stock that fits it.
         </p>
 
-        <FindPartsFinder />
+        <Suspense fallback={null}>
+          <FindPartsFinder />
+        </Suspense>
       </div>
 
       <Footer />

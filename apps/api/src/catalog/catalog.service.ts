@@ -40,6 +40,7 @@ export class CatalogService {
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
       ...(query.brandId ? { brandId: query.brandId } : {}),
       ...(query.vehicleVariantId ? { compatibility: { some: { vehicleVariantId: query.vehicleVariantId } } } : {}),
+      ...(query.featured ? { isFeatured: true } : {}),
       ...(query.priceMin !== undefined || query.priceMax !== undefined
         ? { price: { gte: query.priceMin, lte: query.priceMax } }
         : {}),
