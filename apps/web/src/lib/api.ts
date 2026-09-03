@@ -215,6 +215,10 @@ export function deleteAddress(accessToken: string, id: string) {
 
 // --- Orders ---
 
+export function createOrder(accessToken: string, dto: { shippingAddressId: string; billingAddressId?: string }) {
+  return authFetch<OrderView>("/orders", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
 export function getOrders(accessToken: string) {
   return authFetch<OrderView[]>("/orders", accessToken);
 }
