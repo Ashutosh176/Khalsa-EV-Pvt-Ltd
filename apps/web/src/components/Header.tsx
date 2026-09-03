@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@khalsa-ev/ui";
@@ -22,11 +23,8 @@ export function Header() {
     <header className="border-b border-slate-200 bg-white/90 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-green text-lg font-black text-white">
-            K
-          </div>
-          <div>
-            <div className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">Khalsa EV</div>
+          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-11 w-auto" priority />
+          <div className="hidden sm:block">
             <div className="text-sm text-slate-500">Genuine spare parts</div>
           </div>
         </Link>

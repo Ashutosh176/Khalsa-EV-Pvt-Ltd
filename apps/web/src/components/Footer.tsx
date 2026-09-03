@@ -1,16 +1,15 @@
+import Image from "next/image";
+
 export function Footer() {
   return (
     <footer id="support" className="bg-brand-charcoal py-12 text-white">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr] lg:px-8">
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-green text-lg font-black text-white">
-              K
+            <div className="rounded-xl bg-white px-2.5 py-1.5">
+              <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-8 w-auto" />
             </div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">Khalsa EV</div>
-              <div className="text-sm text-slate-300">Genuine spare parts</div>
-            </div>
+            <div className="text-sm text-slate-300">Genuine spare parts</div>
           </div>
           <p className="mt-5 max-w-xs text-slate-300">
             Premium electric vehicle spare parts and accessories designed for reliability, safety, and performance.

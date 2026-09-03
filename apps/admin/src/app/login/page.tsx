@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@khalsa-ev/ui";
 import { useAuth } from "../../lib/auth-context";
@@ -31,9 +32,7 @@ export default function AdminLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-green text-2xl font-black text-white">
-            K
-          </div>
+          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-14 w-auto" priority />
           <h1 className="mt-4 text-xl font-black tracking-tight text-brand-ink">Khalsa EV Admin</h1>
           <p className="text-sm text-slate-500">Sign in to manage your store</p>
         </div>

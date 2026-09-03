@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../lib/auth-context";
@@ -19,13 +20,8 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-64 flex-shrink-0 flex-col border-r border-slate-200 bg-white">
       <div className="flex items-center gap-3 border-b border-slate-200 px-6 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-green text-lg font-black text-white">
-          K
-        </div>
-        <div>
-          <div className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">Khalsa EV</div>
-          <div className="text-sm text-slate-500">Admin panel</div>
-        </div>
+        <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-10 w-auto" priority />
+        <div className="text-sm text-slate-500">Admin panel</div>
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
