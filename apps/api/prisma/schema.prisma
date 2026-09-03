@@ -23,15 +23,16 @@ enum Role {
 // auth and admin auth are separate API flows/guards (Sections 19 & 21),
 // but they don't need separate storage - see docs/database.md.
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  phone        String?  @unique
-  passwordHash String
-  name         String
-  role         Role?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  phone           String?   @unique
+  phoneVerifiedAt DateTime?
+  passwordHash    String
+  name            String
+  role            Role?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   addresses      Address[]
   cart           Cart?
@@ -44,6 +45,30 @@ model User {
   stockMovements StockMovement[]
 
   @@index([role])
+}
+
+enum OtpPurpose {
+  REGISTER
+  LOGIN
+}
+
+// One row per OTP send attempt via MSG91. MSG91 owns the actual OTP
+// code/expiry; this row only tracks whether *our* verify call against
+// their API has succeeded for a given phone+purpose, and lets a
+// verified proof be redeemed exactly once by register/login-otp
+// (consumedAt) so it can't be replayed across multiple accounts.
+model PhoneOtpVerification {
+  id          String     @id @default(cuid())
+  phone       String
+  purpose     OtpPurpose
+  verified    Boolean    @default(false)
+  verifiedAt  DateTime?
+  consumedAt  DateTime?
+  attempts    Int        @default(0)
+  requestedAt DateTime   @default(now())
+  expiresAt   DateTime
+
+  @@index([phone, purpose, requestedAt])
 }
 
 model Address {

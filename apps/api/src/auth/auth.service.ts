@@ -4,6 +4,8 @@ import { compare, hash } from "bcrypt";
 import type { User } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { requireEnv } from "../common/env";
+import { OtpService } from "./otp.service";
+import { normalizeIndianMobile } from "./phone.util";
 import type { JwtPayload } from "./auth.types";
 import type { RegisterDto } from "./dto/register.dto";
 import type { UpdateProfileDto } from "./dto/update-profile.dto";
@@ -21,6 +23,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly otpService: OtpService,
   ) {}
 
   // Shared by both admin and customer login - role is checked by the
@@ -46,16 +49,42 @@ export class AuthService {
       throw new ConflictException("An account with this email already exists");
     }
 
+    const phone = normalizeIndianMobile(dto.phone);
+    const existingPhone = await this.prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) {
+      throw new ConflictException("An account with this mobile number already exists");
+    }
+
+    // Throws if the proof doesn't match this phone/purpose, was already
+    // used, or has gone stale - register only proceeds past this line
+    // with a phone MSG91 actually verified moments ago.
+    await this.otpService.consumeVerification(dto.phoneVerificationId, dto.phone, "REGISTER");
+
     const passwordHash = await hash(dto.password, PASSWORD_HASH_ROUNDS);
     return this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
-        phone: dto.phone,
+        phone,
+        phoneVerifiedAt: new Date(),
         passwordHash,
         role: null,
       },
     });
+  }
+
+  // OTP-based login: the caller has already redeemed an OTP proof via
+  // POST /auth/otp/verify (purpose: LOGIN) and passes its id here to be
+  // consumed exactly once. No password involved.
+  async loginWithOtp(phone: string, verificationId: string): Promise<User> {
+    const mobile = normalizeIndianMobile(phone);
+    await this.otpService.consumeVerification(verificationId, phone, "LOGIN");
+
+    const user = await this.prisma.user.findUnique({ where: { phone: mobile } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException("No account found with this mobile number");
+    }
+    return user;
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {

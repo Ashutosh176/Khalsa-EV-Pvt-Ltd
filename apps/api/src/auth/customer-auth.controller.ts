@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res, UnauthorizedExc
 import type { Request, Response } from "express";
 import { PrismaService } from "../prisma/prisma.service";
 import { LoginDto } from "./dto/login.dto";
+import { LoginOtpDto } from "./dto/login-otp.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { ChangePasswordDto } from "./dto/change-password.dto";
@@ -36,6 +37,19 @@ export class CustomerAuthController {
   @HttpCode(200)
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const user = await this.authService.validateUser(dto.email, dto.password);
+    const payload = this.authService.toPayload(user);
+    this.setRefreshCookie(res, this.authService.issueRefreshToken(payload));
+
+    return {
+      accessToken: this.authService.issueAccessToken(payload),
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone },
+    };
+  }
+
+  @Post("login/otp")
+  @HttpCode(200)
+  async loginWithOtp(@Body() dto: LoginOtpDto, @Res({ passthrough: true }) res: Response) {
+    const user = await this.authService.loginWithOtp(dto.phone, dto.verificationId);
     const payload = this.authService.toPayload(user);
     this.setRefreshCookie(res, this.authService.issueRefreshToken(payload));
 

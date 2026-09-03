@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@khalsa-ev/ui";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
+import { PhoneOtpVerifier } from "../../components/PhoneOtpVerifier";
 import { useAuth } from "../../lib/auth-context";
 
 const HIGHLIGHTS: [string, string, string][] = [
@@ -16,8 +17,9 @@ const HIGHLIGHTS: [string, string, string][] = [
 ];
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithOtp } = useAuth();
   const router = useRouter();
+  const [tab, setTab] = useState<"password" | "otp">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +31,19 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
+      router.push("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleOtpVerified(phone: string, verificationId: string) {
+    setError(null);
+    setSubmitting(true);
+    try {
+      await loginWithOtp(phone, verificationId);
       router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
@@ -69,41 +84,71 @@ export default function LoginPage() {
             <h1 className="mb-0.5 text-center text-[21px] font-bold">Welcome Back!</h1>
             <p className="mb-4 text-center text-[12.5px] text-brand-sub">Login to your Khalsa EV account</p>
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              {error ? (
-                <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
-                  {error}
-                </p>
-              ) : null}
+            <div className="mb-4 flex rounded-[8px] border border-brand-line p-1 text-[12.5px] font-semibold">
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("password");
+                  setError(null);
+                }}
+                className={`flex-1 rounded-[6px] py-1.5 ${tab === "password" ? "bg-brand-green-dark text-white" : "text-brand-sub"}`}
+              >
+                Password
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("otp");
+                  setError(null);
+                }}
+                className={`flex-1 rounded-[6px] py-1.5 ${tab === "otp" ? "bg-brand-green-dark text-white" : "text-brand-sub"}`}
+              >
+                Login with OTP
+              </button>
+            </div>
 
-              <label className="block">
-                <span className="text-[11.5px] font-bold">Email Address</span>
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2.5 text-[12.5px] outline-none focus:border-brand-green"
-                />
-              </label>
+            {error ? (
+              <p className="mb-3.5 rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
+                {error}
+              </p>
+            ) : null}
 
-              <label className="block">
-                <span className="text-[11.5px] font-bold">Password</span>
-                <input
-                  required
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2.5 text-[12.5px] outline-none focus:border-brand-green"
-                />
-              </label>
+            {tab === "password" ? (
+              <form onSubmit={handleSubmit} className="space-y-3.5">
+                <label className="block">
+                  <span className="text-[11.5px] font-bold">Email Address</span>
+                  <input
+                    required
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2.5 text-[12.5px] outline-none focus:border-brand-green"
+                  />
+                </label>
 
-              <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Logging in..." : "Login"}
-              </Button>
-            </form>
+                <label className="block">
+                  <span className="text-[11.5px] font-bold">Password</span>
+                  <input
+                    required
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2.5 text-[12.5px] outline-none focus:border-brand-green"
+                  />
+                </label>
+
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? "Logging in..." : "Login"}
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-3.5">
+                <PhoneOtpVerifier purpose="LOGIN" onVerified={(phone, verificationId) => void handleOtpVerified(phone, verificationId)} />
+                {submitting ? <p className="text-center text-[12.5px] text-brand-sub">Logging in...</p> : null}
+              </div>
+            )}
 
             <p className="mt-4 text-center text-xs">
               Don&apos;t have an account?{" "}

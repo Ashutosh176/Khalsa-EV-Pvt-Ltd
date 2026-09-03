@@ -114,12 +114,38 @@ export function getVehicleVariants(vehicleModelId: string) {
 
 type AuthResponse = { accessToken: string; user: CustomerUser };
 
-export function registerCustomer(dto: { email: string; password: string; name: string; phone?: string }) {
+export type OtpPurpose = "REGISTER" | "LOGIN";
+
+export function registerCustomer(dto: {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  phoneVerificationId: string;
+}) {
   return authFetch<AuthResponse>("/auth/register", null, { method: "POST", body: JSON.stringify(dto) });
 }
 
 export function loginCustomer(dto: { email: string; password: string }) {
   return authFetch<AuthResponse>("/auth/login", null, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function loginCustomerWithOtp(dto: { phone: string; verificationId: string }) {
+  return authFetch<AuthResponse>("/auth/login/otp", null, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function sendOtp(phone: string, purpose: OtpPurpose) {
+  return authFetch<{ status: string; expiresAt: string }>("/auth/otp/send", null, {
+    method: "POST",
+    body: JSON.stringify({ phone, purpose }),
+  });
+}
+
+export function verifyOtp(phone: string, purpose: OtpPurpose, otp: string) {
+  return authFetch<{ status: string; verificationId: string }>("/auth/otp/verify", null, {
+    method: "POST",
+    body: JSON.stringify({ phone, purpose, otp }),
+  });
 }
 
 export function refreshCustomerSession() {

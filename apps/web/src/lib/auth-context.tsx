@@ -2,15 +2,23 @@
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { CustomerUser } from "@khalsa-ev/types";
-import { getCurrentCustomer, loginCustomer, logoutCustomer, refreshCustomerSession, registerCustomer } from "./api";
+import {
+  getCurrentCustomer,
+  loginCustomer,
+  loginCustomerWithOtp,
+  logoutCustomer,
+  refreshCustomerSession,
+  registerCustomer,
+} from "./api";
 
-type RegisterInput = { email: string; password: string; name: string; phone?: string };
+type RegisterInput = { email: string; password: string; name: string; phone: string; phoneVerificationId: string };
 
 type AuthContextValue = {
   user: CustomerUser | null;
   accessToken: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithOtp: (phone: string, verificationId: string) => Promise<void>;
   register: (dto: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: CustomerUser) => void;
@@ -45,6 +53,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.user);
   }, []);
 
+  const loginWithOtp = useCallback(async (phone: string, verificationId: string) => {
+    const result = await loginCustomerWithOtp({ phone, verificationId });
+    setAccessToken(result.accessToken);
+    setUser(result.user);
+  }, []);
+
   const register = useCallback(async (dto: RegisterInput) => {
     const result = await registerCustomer(dto);
     setAccessToken(result.accessToken);
@@ -58,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, accessToken, loading, login, loginWithOtp, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

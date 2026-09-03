@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@khalsa-ev/ui";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
+import { PhoneOtpVerifier } from "../../components/PhoneOtpVerifier";
 import { useAuth } from "../../lib/auth-context";
 
 const HIGHLIGHTS: [string, string, string][] = [
@@ -20,7 +21,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [verifiedPhone, setVerifiedPhone] = useState<{ phone: string; verificationId: string } | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,13 +30,23 @@ export default function RegisterPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!verifiedPhone) {
+      setError("Please verify your mobile number before creating an account.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords don't match.");
       return;
     }
     setSubmitting(true);
     try {
-      await register({ name, email, password, phone: phone || undefined });
+      await register({
+        name,
+        email,
+        password,
+        phone: verifiedPhone.phone,
+        phoneVerificationId: verifiedPhone.verificationId,
+      });
       router.push("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -83,28 +94,21 @@ export default function RegisterPage() {
                 </p>
               ) : null}
 
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-[11.5px] font-bold">Full Name</span>
-                  <input
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-[11.5px] font-bold">Mobile Number</span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Enter your mobile number"
-                    className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
-                  />
-                </label>
-              </div>
+              <label className="block">
+                <span className="text-[11.5px] font-bold">Full Name</span>
+                <input
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
+                />
+              </label>
+
+              <PhoneOtpVerifier
+                purpose="REGISTER"
+                onVerified={(phone, verificationId) => setVerifiedPhone({ phone, verificationId })}
+              />
 
               <label className="block">
                 <span className="text-[11.5px] font-bold">Email Address</span>
@@ -146,9 +150,12 @@ export default function RegisterPage() {
               </div>
               <div className="text-[10.8px] text-brand-green-dark">✓ At least 8 characters</div>
 
-              <Button type="submit" className="w-full" disabled={submitting}>
+              <Button type="submit" className="w-full" disabled={submitting || !verifiedPhone}>
                 {submitting ? "Creating account..." : "Create Account"}
               </Button>
+              {!verifiedPhone ? (
+                <p className="text-center text-[10.5px] text-brand-sub">Verify your mobile number to continue</p>
+              ) : null}
             </form>
 
             <p className="mt-4 text-center text-xs">

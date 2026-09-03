@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, MinLength } from "class-validator";
+import { IsEmail, IsString, MinLength } from "class-validator";
 
 export class RegisterDto {
   @IsEmail()
@@ -12,7 +12,12 @@ export class RegisterDto {
   @MinLength(1)
   name!: string;
 
-  @IsOptional()
   @IsString()
-  phone?: string;
+  phone!: string;
+
+  // The id returned by POST /auth/otp/verify for this phone number and
+  // purpose: REGISTER - proves the phone was OTP-verified via MSG91
+  // moments earlier, without re-running OTP verification here.
+  @IsString()
+  phoneVerificationId!: string;
 }
