@@ -1,6 +1,7 @@
 import type {
   Address,
   AddressInput,
+  Brand,
   CartView,
   CatalogProduct,
   CatalogProductDetail,
@@ -91,6 +92,10 @@ export function getCatalogProduct(slug: string) {
 
 export function getCategories() {
   return apiFetch<Category[]>("/categories");
+}
+
+export function getBrands() {
+  return apiFetch<Brand[]>("/brands");
 }
 
 export function getVehicleBrands() {

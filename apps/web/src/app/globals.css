@@ -1,10 +1,22 @@
 @import "tailwindcss";
 
+/* Design tokens matching the approved Figma reference
+   (Khalsa_EV_Spare_Parts_Figma_Screens.html). */
 @theme {
-  --color-brand-green: #42b419;
-  --color-brand-ink: #09120c;
-  --color-brand-charcoal: #101614;
-  --color-brand-surface: #f5f7f4;
+  --color-brand-green: #3ea345;
+  --color-brand-green-dark: #1f7a34;
+  --color-brand-green-deep: #155c27;
+  --color-brand-green-light: #eaf7ec;
+  --color-brand-green-line: #cdebd1;
+  --color-brand-ink: #1a1d1f;
+  --color-brand-charcoal: #13171a;
+  --color-brand-charcoal2: #1b2024;
+  --color-brand-sub: #6b7378;
+  --color-brand-line: #e6e8ea;
+  --color-brand-surface: #f6f7f8;
+  --color-brand-red: #e1362f;
+  --color-brand-amber: #b9770e;
+  --font-sans: var(--font-inter), "Inter", system-ui, -apple-system, sans-serif;
 }
 
 :root {
@@ -21,9 +33,9 @@ html {
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: #f5f7f4;
-  color: #09120c;
+  font-family: var(--font-sans);
+  background: #f6f7f8;
+  color: #1a1d1f;
 }
 
 a {

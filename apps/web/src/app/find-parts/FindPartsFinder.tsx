@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CatalogProductCard } from "@khalsa-ev/ui";
 import type { CatalogProduct, VehicleBrand, VehicleModel, VehicleVariant } from "@khalsa-ev/types";
+import { ProductCardActions } from "../../components/ProductCardActions";
 import { getCatalogProducts, getVehicleBrands, getVehicleModels, getVehicleVariants } from "../../lib/api";
 
 export function FindPartsFinder() {
@@ -145,11 +146,12 @@ export function FindPartsFinder() {
                   key={product.id}
                   slug={product.slug}
                   name={product.name}
-                  sku={product.sku}
+                  sub={product.brand?.name}
                   price={product.price}
                   mrp={product.mrp}
                   inStock={product.inStock}
                   imageUrl={product.images[0]?.url}
+                  actions={<ProductCardActions productId={product.id} inStock={product.inStock} />}
                 />
               ))}
             </div>

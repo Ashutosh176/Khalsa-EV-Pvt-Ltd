@@ -1,6 +1,7 @@
 import { CatalogProductCard, SectionHeading } from "@khalsa-ev/ui";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
+import { ProductCardActions } from "../../components/ProductCardActions";
 import { getCatalogProducts, getCategories, type CatalogFilters } from "../../lib/api";
 
 export const metadata = {
@@ -98,11 +99,12 @@ export default async function ProductsPage({
                 key={product.id}
                 slug={product.slug}
                 name={product.name}
-                sku={product.sku}
+                sub={product.brand?.name}
                 price={product.price}
                 mrp={product.mrp}
                 inStock={product.inStock}
                 imageUrl={product.images[0]?.url}
+                actions={<ProductCardActions productId={product.id} inStock={product.inStock} />}
               />
             ))}
           </div>
