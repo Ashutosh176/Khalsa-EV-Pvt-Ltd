@@ -30,15 +30,23 @@ export class InventoryService {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 50;
 
-    const where: Prisma.InventoryWhereInput = query.search
-      ? {
-          OR: [
-            { product: { name: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
-            { product: { sku: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
-            { variant: { sku: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
-          ],
-        }
-      : {};
+    const conditions: Prisma.InventoryWhereInput[] = [];
+    if (query.search) {
+      conditions.push({
+        OR: [
+          { product: { name: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
+          { product: { sku: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
+          { variant: { sku: { contains: query.search, mode: Prisma.QueryMode.insensitive } } },
+        ],
+      });
+    }
+    if (query.categoryId) {
+      conditions.push({ product: { categoryId: query.categoryId } });
+    }
+    if (query.brandId) {
+      conditions.push({ product: { brandId: query.brandId } });
+    }
+    const where: Prisma.InventoryWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
     const rows = await this.prisma.inventory.findMany({
       where,

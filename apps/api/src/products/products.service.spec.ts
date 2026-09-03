@@ -37,6 +37,8 @@ type MockPrisma = {
   product: {
     findUnique: AsyncMock<Row | null>;
     findUniqueOrThrow: AsyncMock<Row>;
+    findMany: AsyncMock<Row[]>;
+    count: AsyncMock<number>;
   };
   $transaction: Mock;
 };
@@ -63,6 +65,8 @@ describe("ProductsService", () => {
       product: {
         findUnique: jest.fn<AsyncFn<Row | null>>().mockResolvedValue(null), // slug is free by default
         findUniqueOrThrow: jest.fn<AsyncFn<Row>>(),
+        findMany: jest.fn<AsyncFn<Row[]>>().mockResolvedValue([]),
+        count: jest.fn<AsyncFn<number>>().mockResolvedValue(0),
       },
       $transaction: jest.fn((arg: unknown) =>
         Array.isArray(arg) ? Promise.all(arg) : (arg as (tx: MockTx) => unknown)(tx),
@@ -129,6 +133,29 @@ describe("ProductsService", () => {
         }),
       );
       await expect(service.create(baseDto())).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe("findAll", () => {
+    it("filters by categoryId when given", async () => {
+      await service.findAll({ categoryId: "cat-1" });
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ categoryId: "cat-1" }) }),
+      );
+    });
+
+    it("filters by brandId when given", async () => {
+      await service.findAll({ brandId: "brand-1" });
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ brandId: "brand-1" }) }),
+      );
+    });
+
+    it("does not filter by categoryId or brandId when omitted", async () => {
+      await service.findAll({});
+      const [[args]] = prisma.product.findMany.mock.calls as [[{ where: Record<string, unknown> }]];
+      expect(args.where).not.toHaveProperty("categoryId");
+      expect(args.where).not.toHaveProperty("brandId");
     });
   });
 

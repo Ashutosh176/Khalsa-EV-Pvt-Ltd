@@ -81,6 +81,7 @@ export function getAdminMe(accessToken: string) {
 export type ProductFilters = {
   search?: string;
   categoryId?: string;
+  brandId?: string;
   status?: string;
   page?: number;
   pageSize?: number;
@@ -145,7 +146,14 @@ export function updateOrderShipment(accessToken: string, id: string, dto: Update
 
 // --- Inventory ---
 
-export type InventoryFilters = { search?: string; lowStockOnly?: boolean; page?: number; pageSize?: number };
+export type InventoryFilters = {
+  search?: string;
+  categoryId?: string;
+  brandId?: string;
+  lowStockOnly?: boolean;
+  page?: number;
+  pageSize?: number;
+};
 
 export function getAdminInventory(accessToken: string, filters: InventoryFilters = {}) {
   return authFetch<PaginatedResult<AdminInventoryItem>>(`/admin/inventory${toQueryString(filters)}`, accessToken);

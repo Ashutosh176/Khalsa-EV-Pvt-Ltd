@@ -5,8 +5,8 @@ import { Button, StatCard } from "@khalsa-ev/ui";
 import { AdminShell } from "../../components/AdminShell";
 import { AdminTopbar } from "../../components/AdminTopbar";
 import { useAuth } from "../../lib/auth-context";
-import { adjustInventory, getAdminInventory } from "../../lib/api";
-import type { AdminInventoryItem } from "../../lib/types";
+import { adjustInventory, getAdminInventory, getBrands, getCategories } from "../../lib/api";
+import type { AdminInventoryItem, Brand, Category } from "../../lib/types";
 
 function AdjustModal({
   item,
@@ -98,12 +98,27 @@ function InventoryContent() {
   const [items, setItems] = useState<AdminInventoryItem[] | null>(null);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("all");
   const [adjustingItem, setAdjustingItem] = useState<AdminInventoryItem | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => undefined);
+    getBrands().then(setBrands).catch(() => undefined);
+  }, []);
 
   function reload() {
     if (!accessToken) return;
-    getAdminInventory(accessToken, { search, lowStockOnly: tab === "low", pageSize: 100 })
+    getAdminInventory(accessToken, {
+      search,
+      categoryId: categoryId || undefined,
+      brandId: brandId || undefined,
+      lowStockOnly: tab === "low",
+      pageSize: 100,
+    })
       .then((result) => {
         setItems(result.items);
         setTotal(result.total);
@@ -111,7 +126,7 @@ function InventoryContent() {
       .catch(() => setItems([]));
   }
 
-  useEffect(reload, [accessToken, search, tab]);
+  useEffect(reload, [accessToken, search, categoryId, brandId, tab]);
 
   const visibleItems = tab === "out" ? (items ?? []).filter((i) => i.availableStock <= 0) : items;
   const totalStockUnits = (items ?? []).reduce((sum, i) => sum + i.currentStock, 0);
@@ -155,6 +170,32 @@ function InventoryContent() {
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] outline-none focus:border-brand-green"
             />
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
+            >
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {brands.length > 0 ? (
+              <select
+                value={brandId}
+                onChange={(e) => setBrandId(e.target.value)}
+                className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
+              >
+                <option value="">All Brands</option>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+            ) : null}
           </div>
 
           <table className="dt w-full text-left text-[12.5px]">

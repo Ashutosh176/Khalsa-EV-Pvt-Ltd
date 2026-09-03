@@ -113,6 +113,7 @@ export class ProductsService {
 
     const where: Prisma.ProductWhereInput = {
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      ...(query.brandId ? { brandId: query.brandId } : {}),
       ...(query.status ? { status: query.status } : {}),
       ...(query.productType ? { productType: query.productType } : {}),
       ...(query.search

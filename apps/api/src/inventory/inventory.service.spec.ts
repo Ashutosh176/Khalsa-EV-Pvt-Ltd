@@ -69,6 +69,35 @@ describe("InventoryService", () => {
       expect(result.items[0]?.id).toBe("inv-2");
       expect(result.total).toBe(1);
     });
+
+    it("filters by categoryId via the product relation, when given", async () => {
+      await service.list({ categoryId: "cat-1" });
+      expect(prisma.inventory.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ product: { categoryId: "cat-1" } }] },
+        }),
+      );
+    });
+
+    it("filters by brandId via the product relation, when given", async () => {
+      await service.list({ brandId: "brand-1" });
+      expect(prisma.inventory.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { AND: [{ product: { brandId: "brand-1" } }] },
+        }),
+      );
+    });
+
+    it("combines search, categoryId and brandId into a single AND clause", async () => {
+      await service.list({ search: "battery", categoryId: "cat-1", brandId: "brand-1" });
+      const [[args]] = prisma.inventory.findMany.mock.calls as [[{ where: { AND: unknown[] } }]];
+      expect(args.where.AND).toHaveLength(3);
+    });
+
+    it("queries with an empty where clause when no filters are given", async () => {
+      await service.list({});
+      expect(prisma.inventory.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+    });
   });
 
   describe("adjust", () => {

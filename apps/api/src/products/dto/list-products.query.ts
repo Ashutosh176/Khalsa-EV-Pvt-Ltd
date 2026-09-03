@@ -25,6 +25,10 @@ export class ListProductsQuery {
   categoryId?: string;
 
   @IsOptional()
+  @IsString()
+  brandId?: string;
+
+  @IsOptional()
   @IsIn(Object.values(ProductStatus))
   status?: ProductStatus;
 

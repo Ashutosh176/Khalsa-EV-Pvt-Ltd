@@ -7,8 +7,8 @@ import { Button, StatCard } from "@khalsa-ev/ui";
 import { AdminShell } from "../../components/AdminShell";
 import { AdminTopbar } from "../../components/AdminTopbar";
 import { useAuth } from "../../lib/auth-context";
-import { getAdminInventory, getAdminProducts } from "../../lib/api";
-import type { AdminProduct } from "../../lib/types";
+import { getAdminInventory, getAdminProducts, getBrands, getCategories } from "../../lib/api";
+import type { AdminProduct, Brand, Category } from "../../lib/types";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-slate-100 text-slate-600",
@@ -24,14 +24,30 @@ function ProductsContent() {
   const [activeTotal, setActiveTotal] = useState(0);
   const [lowStockTotal, setLowStockTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [brandId, setBrandId] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const pageSize = 20;
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => undefined);
+    getBrands().then(setBrands).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!accessToken) return;
     let cancelled = false;
-    getAdminProducts(accessToken, { search, status: status || undefined, page, pageSize })
+    getAdminProducts(accessToken, {
+      search,
+      categoryId: categoryId || undefined,
+      brandId: brandId || undefined,
+      status: status || undefined,
+      page,
+      pageSize,
+    })
       .then((result) => {
         if (cancelled) return;
         setProducts(result.items);
@@ -43,7 +59,7 @@ function ProductsContent() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, search, status, page]);
+  }, [accessToken, search, categoryId, brandId, status, page]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -102,6 +118,38 @@ function ProductsContent() {
                 }}
                 className="min-w-[220px] flex-1 rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] outline-none focus:border-brand-green"
               />
+              <select
+                value={categoryId}
+                onChange={(e) => {
+                  setPage(1);
+                  setCategoryId(e.target.value);
+                }}
+                className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
+              >
+                <option value="">All Categories</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {brands.length > 0 ? (
+                <select
+                  value={brandId}
+                  onChange={(e) => {
+                    setPage(1);
+                    setBrandId(e.target.value);
+                  }}
+                  className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
+                >
+                  <option value="">All Brands</option>
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              ) : null}
               <select
                 value={status}
                 onChange={(e) => {

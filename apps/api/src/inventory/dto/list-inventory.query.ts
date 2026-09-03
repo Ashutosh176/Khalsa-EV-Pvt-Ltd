@@ -19,6 +19,14 @@ export class ListInventoryQuery {
   @IsString()
   search?: string;
 
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsString()
+  brandId?: string;
+
   // `@Type(() => Boolean)` is wrong for query strings: JS's Boolean("false")
   // is `true` (any non-empty string is truthy), so a literal "?lowStockOnly=false"
   // would silently become `true` and filter out every non-low-stock row.
