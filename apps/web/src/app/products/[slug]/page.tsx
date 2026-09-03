@@ -1,10 +1,15 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CatalogProductCard } from "@khalsa-ev/ui";
+import { formatIndianRupees } from "@khalsa-ev/utils";
 import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
-import { getCatalogProduct } from "../../../lib/api";
-import { formatIndianRupees } from "@khalsa-ev/utils";
-import { ProductActions } from "./ProductActions";
+import { ProductCardActions } from "../../../components/ProductCardActions";
+import { getCatalogProduct, getCatalogProducts } from "../../../lib/api";
+import { ProductGallery } from "./ProductGallery";
+import { ProductBuyBox } from "./ProductBuyBox";
+import { ProductTabs } from "./ProductTabs";
 
 async function loadProduct(slug: string) {
   try {
@@ -30,114 +35,151 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!product) notFound();
 
   const discountPercent = product.mrp > product.price ? Math.round((1 - product.price / product.mrp) * 100) : 0;
-  const specifications = product.specifications;
+  const specEntries = product.specifications ? Object.entries(product.specifications) : [];
+
+  const related = (await getCatalogProducts({ categoryId: product.category.id, pageSize: 5 })).items.filter(
+    (p) => p.id !== product.id,
+  );
+
+  const rawTabs: ({ label: string; content: ReactNode } | null)[] = [
+    specEntries.length > 0
+      ? {
+          label: "Specifications",
+          content: (
+            <div className="grid gap-x-10 gap-y-2 text-[12.5px] sm:grid-cols-2">
+              {specEntries.map(([key, value]) => (
+                <div key={key} className="flex justify-between border-b border-dashed border-brand-line py-1.5">
+                  <span className="text-brand-sub">{key}</span>
+                  <span className="font-bold">{String(value)}</span>
+                </div>
+              ))}
+            </div>
+          ),
+        }
+      : null,
+    product.description
+      ? { label: "Description", content: <p className="max-w-3xl text-[13px] leading-relaxed text-brand-ink">{product.description}</p> }
+      : null,
+    product.compatibility.length > 0
+      ? {
+          label: "Compatibility",
+          content: (
+            <ul className="space-y-1.5 text-[13px]">
+              {product.compatibility.map((entry) => (
+                <li key={entry.id} className="flex items-center gap-2">
+                  <span className="font-bold text-brand-green">✓</span>
+                  {entry.vehicleVariant.model.brand.name} {entry.vehicleVariant.model.name} {entry.vehicleVariant.name}
+                  {entry.vehicleYear ? ` (${entry.vehicleYear.year})` : ""}
+                </li>
+              ))}
+            </ul>
+          ),
+        }
+      : null,
+    product.warrantyMonths
+      ? {
+          label: "Warranty & Returns",
+          content: (
+            <p className="text-[13px] text-brand-ink">
+              Covered by a {product.warrantyMonths}-month manufacturer warranty. Eligible for a 7-day return if the item
+              arrives damaged or doesn&apos;t match the listing.
+            </p>
+          ),
+        }
+      : null,
+  ];
+  const tabs = rawTabs.filter((tab): tab is { label: string; content: ReactNode } => tab !== null);
 
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <nav className="text-sm text-slate-500">
-          <Link href="/products" className="hover:text-brand-green">
-            Shop
-          </Link>
-          <span className="mx-2">/</span>
-          <Link href={`/products?categoryId=${product.category.id}`} className="hover:text-brand-green">
-            {product.category.name}
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-slate-700">{product.name}</span>
-        </nav>
+      <div className="mx-auto max-w-[1440px] px-4 pt-3.5 text-xs text-brand-sub sm:px-7">
+        <Link href="/products" className="hover:text-brand-green-dark">
+          Home
+        </Link>
+        {" › "}
+        <Link href={`/products?categoryId=${product.category.id}`} className="hover:text-brand-green-dark">
+          {product.category.name}
+        </Link>
+        {" › "}
+        <span className="text-brand-ink">{product.name}</span>
+      </div>
 
-        <div className="mt-6 grid gap-10 lg:grid-cols-2">
-          <div className="flex h-96 items-center justify-center rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_top,_#ecfdf5,_#eef7ee_40%,_#f5f5f5_100%)]">
-            {product.images[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element -- product images are remote, unoptimized is fine for now
-              <img
-                src={product.images[0].url}
-                alt={product.images[0].altText ?? product.name}
-                className="h-full w-full rounded-[2rem] object-cover"
-              />
-            ) : (
-              <span className="text-8xl">🔧</span>
-            )}
-          </div>
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-7 px-4 py-7 sm:px-7 lg:flex-row">
+        <div className="lg:w-[340px] lg:shrink-0">
+          <ProductGallery images={product.images} name={product.name} />
+        </div>
 
-          <div>
-            {product.brand ? (
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">{product.brand.name}</p>
-            ) : null}
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-brand-ink sm:text-4xl">{product.name}</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              SKU: {product.sku}
-              {product.partNumber ? ` · Part #${product.partNumber}` : ""}
-            </p>
+        <div className="flex-1">
+          {product.brand ? (
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">{product.brand.name}</p>
+          ) : null}
+          <h1 className="mt-1.5 text-[21px] font-bold">{product.name}</h1>
+          <p className="mt-1 text-[13px] text-brand-sub">
+            SKU: {product.sku}
+            {product.partNumber ? ` · Part #${product.partNumber}` : ""}
+          </p>
 
-            <div className="mt-6 flex items-center gap-3">
-              <span className="text-3xl font-black text-brand-ink">{formatIndianRupees(product.price)}</span>
-              {discountPercent > 0 ? (
-                <>
-                  <span className="text-lg text-slate-400 line-through">{formatIndianRupees(product.mrp)}</span>
-                  <span className="rounded-full bg-brand-green/10 px-3 py-1 text-sm font-bold text-brand-green">
-                    {discountPercent}% off
-                  </span>
-                </>
-              ) : null}
-            </div>
-            {product.gstPercent && Number(product.gstPercent) > 0 ? (
-              <p className="mt-1 text-xs text-slate-400">Inclusive of {product.gstPercent}% GST</p>
-            ) : null}
-
-            <div className="mt-4">
-              <span
-                className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] ${
-                  product.inStock ? "bg-brand-green/10 text-brand-green" : "bg-red-50 text-red-500"
-                }`}
-              >
-                {product.inStock ? `In stock (${product.availableStock} available)` : "Out of stock"}
-              </span>
-            </div>
-
-            <ProductActions productId={product.id} inStock={product.inStock} />
-
-            {product.warrantyMonths ? (
-              <p className="mt-4 text-sm text-slate-600">Warranty: {product.warrantyMonths} months</p>
-            ) : null}
-
-            {product.description ? <p className="mt-6 text-slate-600">{product.description}</p> : null}
-
-            {product.compatibility.length > 0 ? (
-              <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">Compatible with</h2>
-                <ul className="mt-3 space-y-2">
-                  {product.compatibility.map((entry) => (
-                    <li key={entry.id} className="flex items-center gap-2 text-sm text-slate-700">
-                      <span className="font-bold text-brand-green">✓</span>
-                      {entry.vehicleVariant.model.brand.name} {entry.vehicleVariant.model.name}{" "}
-                      {entry.vehicleVariant.name}
-                      {entry.vehicleYear ? ` (${entry.vehicleYear.year})` : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {specifications && Object.keys(specifications).length > 0 ? (
-              <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">Specifications</h2>
-                <dl className="mt-3 space-y-2 text-sm">
-                  {Object.entries(specifications).map(([key, value]) => (
-                    <div key={key} className="flex justify-between gap-4 border-b border-slate-100 pb-2">
-                      <dt className="text-slate-500">{key}</dt>
-                      <dd className="font-medium text-slate-700">{String(value)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
+          <div className="mt-3.5 flex items-baseline gap-2.5">
+            <span className="text-[26px] font-extrabold">{formatIndianRupees(product.price)}</span>
+            {discountPercent > 0 ? (
+              <>
+                <span className="text-[13px] text-brand-sub line-through">{formatIndianRupees(product.mrp)}</span>
+                <span className="text-[13px] font-bold text-brand-red">{discountPercent}% OFF</span>
+              </>
             ) : null}
           </div>
+          {product.gstPercent && Number(product.gstPercent) > 0 ? (
+            <p className="mt-1 text-xs text-brand-sub">Inclusive of {product.gstPercent}% GST</p>
+          ) : null}
+
+          <div className="mt-3 text-[12px] font-bold text-brand-green-dark">
+            {product.inStock ? `● In Stock — ${product.availableStock} available` : "● Out of stock"}
+          </div>
+
+          {product.compatibility.length > 0 ? (
+            <div className="mt-3.5 rounded-[10px] border border-brand-line p-3.5 text-xs">
+              <b>Compatible With:</b>{" "}
+              {product.compatibility
+                .slice(0, 6)
+                .map((entry) => `${entry.vehicleVariant.model.brand.name} ${entry.vehicleVariant.model.name} ${entry.vehicleVariant.name}`)
+                .join(", ")}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="lg:w-[280px] lg:shrink-0">
+          <ProductBuyBox productId={product.id} price={product.price} mrp={product.mrp} inStock={product.inStock} />
         </div>
       </div>
+
+      {tabs.length > 0 ? (
+        <div className="mx-auto max-w-[1440px] px-4 pb-7 sm:px-7">
+          <ProductTabs tabs={tabs} />
+        </div>
+      ) : null}
+
+      {related.length > 0 ? (
+        <div className="mx-auto max-w-[1440px] px-4 pb-9 sm:px-7">
+          <h3 className="mb-3.5 text-[15px] font-bold">You May Also Like</h3>
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4">
+            {related.slice(0, 4).map((p) => (
+              <CatalogProductCard
+                key={p.id}
+                slug={p.slug}
+                name={p.name}
+                sub={p.brand?.name}
+                price={p.price}
+                mrp={p.mrp}
+                inStock={p.inStock}
+                imageUrl={p.images[0]?.url}
+                actions={<ProductCardActions productId={p.id} inStock={p.inStock} />}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <Footer />
     </main>
