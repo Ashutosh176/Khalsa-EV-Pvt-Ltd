@@ -29,41 +29,41 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+    <main className="flex min-h-screen items-center justify-center bg-brand-surface px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center">
+        <div className="mb-7 flex flex-col items-center">
           <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-14 w-auto" priority />
-          <h1 className="mt-4 text-xl font-black tracking-tight text-brand-ink">Khalsa EV Admin</h1>
-          <p className="text-sm text-slate-500">Sign in to manage your store</p>
+          <h1 className="mt-3.5 text-[21px] font-bold">Khalsa EV Admin</h1>
+          <p className="text-[13px] text-brand-sub">Sign in to manage your store</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-3.5 rounded-[10px] border border-brand-line bg-white p-5">
           {error ? (
-            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600" role="alert">
+            <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
               {error}
             </p>
           ) : null}
 
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Email</span>
+            <span className="text-[12.5px] font-medium text-brand-sub">Email</span>
             <input
               required
               type="email"
               autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+              className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-slate-700">Password</span>
+            <span className="text-[12.5px] font-medium text-brand-sub">Password</span>
             <input
               required
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
+              className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
             />
           </label>
 
@@ -72,7 +72,7 @@ export default function AdminLoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-5 text-center text-xs text-brand-sub">
           Admin access only. There is no public registration for this panel.
         </p>
       </div>

@@ -4,34 +4,31 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatIndianRupees } from "@khalsa-ev/utils";
 import { AdminShell } from "../../components/AdminShell";
+import { AdminTopbar } from "../../components/AdminTopbar";
 import { useAuth } from "../../lib/auth-context";
 import { getAdminOrders } from "../../lib/api";
 import type { AdminOrderListItem } from "../../lib/types";
 
-const STATUS_OPTIONS = [
-  "PENDING",
-  "CONFIRMED",
-  "PROCESSING",
-  "PACKED",
-  "SHIPPED",
-  "OUT_FOR_DELIVERY",
-  "DELIVERED",
-  "CANCELLED",
-  "RETURNED",
-  "REFUNDED",
-];
+const STATUS_TABS = [
+  ["", "All Orders"],
+  ["PENDING", "Pending"],
+  ["PROCESSING", "Processing"],
+  ["SHIPPED", "Shipped"],
+  ["DELIVERED", "Delivered"],
+  ["CANCELLED", "Cancelled"],
+  ["RETURNED", "Returned"],
+] as const;
 
 const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-slate-100 text-slate-600",
-  CONFIRMED: "bg-blue-100 text-blue-700",
-  PROCESSING: "bg-blue-100 text-blue-700",
-  PACKED: "bg-amber-100 text-amber-700",
-  SHIPPED: "bg-amber-100 text-amber-700",
-  OUT_FOR_DELIVERY: "bg-amber-100 text-amber-700",
-  DELIVERED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-red-100 text-red-700",
-  RETURNED: "bg-red-100 text-red-700",
-  REFUNDED: "bg-red-100 text-red-700",
+  DELIVERED: "bg-[#E8F7EA] text-[#1F8A3B]",
+  PACKED: "bg-[#FFF3DF] text-[#B9770E]",
+  SHIPPED: "bg-[#FFF3DF] text-[#B9770E]",
+  OUT_FOR_DELIVERY: "bg-[#FFF3DF] text-[#B9770E]",
+  CANCELLED: "bg-[#FDE8E7] text-[#D93429]",
+  RETURNED: "bg-[#FDE8E7] text-[#D93429]",
+  PENDING: "bg-[#E7F0FE] text-[#2563C6]",
+  CONFIRMED: "bg-[#E7F0FE] text-[#2563C6]",
+  PROCESSING: "bg-[#E7F0FE] text-[#2563C6]",
 };
 
 function OrdersContent() {
@@ -61,112 +58,120 @@ function OrdersContent() {
   }, [accessToken, search, status, page]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const rangeStart = orders && orders.length > 0 ? (page - 1) * pageSize + 1 : 0;
+  const rangeEnd = orders ? (page - 1) * pageSize + orders.length : 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-black tracking-tight text-slate-900">Orders</h1>
-      <p className="mt-1 text-slate-500">{total} orders</p>
+    <div>
+      <AdminTopbar placeholder="Search orders, customers, products..." />
 
-      <div className="mt-6 flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-        <input
-          type="search"
-          placeholder="Search order number or customer"
-          value={search}
-          onChange={(e) => {
-            setPage(1);
-            setSearch(e.target.value);
-          }}
-          className="min-w-[240px] flex-1 rounded-full border border-slate-200 px-4 py-2 text-sm outline-none focus:border-brand-green"
-        />
-        <select
-          value={status}
-          onChange={(e) => {
-            setPage(1);
-            setStatus(e.target.value);
-          }}
-          className="rounded-full border border-slate-200 px-4 py-2 text-sm"
-        >
-          <option value="">All statuses</option>
-          {STATUS_OPTIONS.map((s) => (
-            <option key={s} value={s}>
-              {s.replace(/_/g, " ")}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="p-5">
+        <h1 className="text-[23px] font-bold">Order Management</h1>
+        <p className="mt-0.5 text-[13px] text-brand-sub">View, manage and track all customer orders.</p>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table className="min-w-full text-left text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 text-slate-500">
-              <th className="px-5 py-3 font-medium">Order</th>
-              <th className="px-5 py-3 font-medium">Customer</th>
-              <th className="px-5 py-3 font-medium">Items</th>
-              <th className="px-5 py-3 font-medium">Total</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Placed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders === null ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-6 text-center text-slate-500">
-                  Loading...
-                </td>
+        <div className="mt-4 rounded-[10px] border border-brand-line bg-white">
+          <div className="flex gap-4 overflow-x-auto border-b border-brand-line px-4 py-2.5 text-[12.5px] font-semibold text-brand-sub">
+            {STATUS_TABS.map(([value, label]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setPage(1);
+                  setStatus(value);
+                }}
+                className={`shrink-0 whitespace-nowrap pb-1.5 ${
+                  status === value ? "border-b-2 border-brand-green-dark text-brand-green-dark" : ""
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2.5 border-b border-brand-line p-3.5">
+            <input
+              type="search"
+              placeholder="Search by Order ID, Customer, Phone, Email..."
+              value={search}
+              onChange={(e) => {
+                setPage(1);
+                setSearch(e.target.value);
+              }}
+              className="flex-1 rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] outline-none focus:border-brand-green"
+            />
+          </div>
+
+          <table className="dt w-full text-left text-[12.5px]">
+            <thead>
+              <tr className="text-[11px] uppercase tracking-wide text-brand-sub">
+                <th className="px-4 py-2.5 font-semibold">Order ID</th>
+                <th className="px-4 py-2.5 font-semibold">Customer</th>
+                <th className="px-4 py-2.5 font-semibold">Items</th>
+                <th className="px-4 py-2.5 font-semibold">Amount</th>
+                <th className="px-4 py-2.5 font-semibold">Status</th>
+                <th className="px-4 py-2.5 font-semibold">Placed</th>
               </tr>
-            ) : orders.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-6 text-center text-slate-500">
-                  No orders found.
-                </td>
-              </tr>
-            ) : (
-              orders.map((order) => (
-                <tr key={order.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                  <td className="px-5 py-3 font-semibold text-slate-800">
-                    <Link href={`/orders/${order.id}`} className="hover:text-brand-green">
-                      {order.orderNumber}
-                    </Link>
+            </thead>
+            <tbody>
+              {orders === null ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-brand-sub">
+                    Loading...
                   </td>
-                  <td className="px-5 py-3 text-slate-600">
-                    {order.user.name}
-                    <span className="block text-xs text-slate-400">{order.user.email}</span>
-                  </td>
-                  <td className="px-5 py-3 text-slate-600">{order.items.length}</td>
-                  <td className="px-5 py-3 font-semibold text-slate-800">{formatIndianRupees(order.totalAmount)}</td>
-                  <td className="px-5 py-3">
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        STATUS_STYLES[order.status] ?? "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {order.status.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-slate-500">{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-6 text-center text-brand-sub">
+                    No orders found.
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order) => (
+                  <tr key={order.id} className="border-t border-[#EFF0F1] hover:bg-brand-surface">
+                    <td className="px-4 py-2.5 font-bold text-brand-green-dark">
+                      <Link href={`/orders/${order.id}`}>{order.orderNumber}</Link>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <b>{order.user.name}</b>
+                      <span className="block text-[11px] text-brand-sub">{order.user.email}</span>
+                    </td>
+                    <td className="px-4 py-2.5">{order.items.length}</td>
+                    <td className="px-4 py-2.5 font-bold">{formatIndianRupees(order.totalAmount)}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-bold ${STATUS_STYLES[order.status] ?? "bg-slate-100 text-slate-600"}`}>
+                        {order.status.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-brand-sub">{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
 
-      {totalPages > 1 ? (
-        <div className="mt-6 flex items-center justify-center gap-3">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
-            <button
-              key={pageNumber}
-              type="button"
-              onClick={() => setPage(pageNumber)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ${
-                pageNumber === page ? "bg-brand-green text-white" : "border border-slate-200 text-slate-600"
-              }`}
-            >
-              {pageNumber}
-            </button>
-          ))}
+          <div className="flex items-center justify-between px-4 py-3 text-xs text-brand-sub">
+            <span>
+              Showing {rangeStart} to {rangeEnd} of {total} orders
+            </span>
+            {totalPages > 1 ? (
+              <div className="flex gap-1.5">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                  <button
+                    key={pageNumber}
+                    type="button"
+                    onClick={() => setPage(pageNumber)}
+                    className={`rounded-[6px] px-2.5 py-1 font-semibold ${
+                      pageNumber === page ? "bg-brand-green text-white" : "border border-brand-line text-brand-ink"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

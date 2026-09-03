@@ -60,18 +60,21 @@ export function StatCard({
   label,
   value,
   trend,
+  icon,
 }: {
   label: string;
   value: string;
   trend?: string;
+  icon?: string;
 }) {
   return (
-    <div className="rounded-[10px] border border-brand-line bg-white p-5 shadow-sm">
-      <p className="text-sm text-brand-sub">{label}</p>
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <span className="text-3xl font-black text-brand-ink">{value}</span>
-        {trend ? <span className="text-xs font-semibold text-brand-green-dark">{trend}</span> : null}
+    <div className="flex-1 rounded-[10px] border border-brand-line bg-white p-4">
+      <div className="flex items-center justify-between text-[11.5px] text-brand-sub">
+        <span>{label}</span>
+        {icon ? <span className="text-base">{icon}</span> : null}
       </div>
+      <div className="my-1.5 text-[22px] font-extrabold text-brand-ink">{value}</div>
+      {trend ? <div className="text-[10.5px] font-bold text-brand-green-dark">{trend}</div> : null}
     </div>
   );
 }

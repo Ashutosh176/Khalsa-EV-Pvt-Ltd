@@ -15,8 +15,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-brand-surface">
+        <p className="text-sm text-brand-sub">Loading...</p>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   if (!user) return null; // redirecting
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-brand-surface">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
