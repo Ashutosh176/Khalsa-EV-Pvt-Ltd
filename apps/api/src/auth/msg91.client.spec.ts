@@ -8,7 +8,6 @@ describe("Msg91Client", () => {
 
   beforeEach(() => {
     process.env.MSG91_AUTH_KEY = "test-authkey";
-    process.env.MSG91_OTP_TEMPLATE_ID = "test-template";
     fetchMock = jest.fn();
     (global as unknown as { fetch: typeof fetch }).fetch = fetchMock as unknown as typeof fetch;
     client = new Msg91Client();
@@ -18,44 +17,46 @@ describe("Msg91Client", () => {
     return { ok, json: () => Promise.resolve(body) };
   }
 
-  describe("sendOtp", () => {
-    it("calls MSG91's send endpoint with the template id, mobile and authkey header", async () => {
-      fetchMock.mockResolvedValue(jsonResponse({ type: "success", message: "req-1" }));
+  describe("verifyWidgetAccessToken", () => {
+    it("posts the authkey and access-token as a JSON body to the widget verify endpoint", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ type: "success", message: "919876543210" }));
 
-      await client.sendOtp("919876543210");
+      await client.verifyWidgetAccessToken("jwt-token-1");
 
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-      expect(url).toContain("template_id=test-template");
-      expect(url).toContain("mobile=919876543210");
+      expect(url).toBe("https://control.msg91.com/api/v5/widget/verifyAccessToken");
       expect(init.method).toBe("POST");
-      expect((init.headers as Record<string, string>).authkey).toBe("test-authkey");
+      expect(JSON.parse(init.body as string)).toEqual({ authkey: "test-authkey", "access-token": "jwt-token-1" });
     });
 
-    it("throws BadGatewayException when MSG91 reports an error", async () => {
-      fetchMock.mockResolvedValue(jsonResponse({ type: "error", message: "Invalid mobile number" }));
-      await expect(client.sendOtp("919876543210")).rejects.toThrow(BadGatewayException);
+    it("returns the verified mobile when message is a plain string", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ type: "success", message: "919876543210" }));
+      await expect(client.verifyWidgetAccessToken("jwt-token-1")).resolves.toBe("919876543210");
+    });
+
+    it("returns the verified mobile when message is an object with a mobile field", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ type: "success", message: { mobile: "919876543210" } }));
+      await expect(client.verifyWidgetAccessToken("jwt-token-1")).resolves.toBe("919876543210");
+    });
+
+    it("returns the verified mobile when message is an object with an identifier field", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ type: "success", message: { identifier: "919876543210" } }));
+      await expect(client.verifyWidgetAccessToken("jwt-token-1")).resolves.toBe("919876543210");
+    });
+
+    it("returns null (not a throw) when MSG91 rejects the token", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ type: "error", message: "Invalid access-token" }));
+      await expect(client.verifyWidgetAccessToken("bad-token")).resolves.toBeNull();
     });
 
     it("throws BadGatewayException when the network request fails", async () => {
       fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
-      await expect(client.sendOtp("919876543210")).rejects.toThrow(BadGatewayException);
-    });
-  });
-
-  describe("verifyOtp", () => {
-    it("returns true when MSG91 reports success", async () => {
-      fetchMock.mockResolvedValue(jsonResponse({ type: "success", message: "OTP verified" }));
-      await expect(client.verifyOtp("919876543210", "1234")).resolves.toBe(true);
-    });
-
-    it("returns false (not a throw) when the OTP is simply wrong", async () => {
-      fetchMock.mockResolvedValue(jsonResponse({ type: "error", message: "OTP not matched" }));
-      await expect(client.verifyOtp("919876543210", "0000")).resolves.toBe(false);
+      await expect(client.verifyWidgetAccessToken("jwt-token-1")).rejects.toThrow(BadGatewayException);
     });
 
     it("throws BadGatewayException when MSG91's response is unreadable", async () => {
       fetchMock.mockResolvedValue({ ok: true, json: () => Promise.reject(new Error("bad json")) });
-      await expect(client.verifyOtp("919876543210", "1234")).rejects.toThrow(BadGatewayException);
+      await expect(client.verifyWidgetAccessToken("jwt-token-1")).rejects.toThrow(BadGatewayException);
     });
   });
 });

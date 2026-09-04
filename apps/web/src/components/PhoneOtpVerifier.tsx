@@ -62,11 +62,11 @@ export function PhoneOtpVerifier({
         {flow.status === "idle" || flow.status === "sending" ? (
           <button
             type="button"
-            disabled={!flow.isPhoneValid || flow.status === "sending"}
-            onClick={() => void flow.send()}
+            disabled={!flow.isPhoneValid || flow.status === "sending" || !flow.widgetReady}
+            onClick={flow.send}
             className="shrink-0 rounded-[7px] bg-brand-green-dark px-3 text-xs font-bold text-white disabled:opacity-40"
           >
-            {flow.status === "sending" ? "Sending..." : "Send OTP"}
+            {flow.status === "sending" ? "Sending..." : flow.widgetReady ? "Send OTP" : "Loading..."}
           </button>
         ) : (
           <button
@@ -93,7 +93,7 @@ export function PhoneOtpVerifier({
           <button
             type="button"
             disabled={flow.otp.length < 4 || flow.status === "verifying"}
-            onClick={() => void flow.verify()}
+            onClick={flow.verify}
             className="shrink-0 rounded-[7px] bg-brand-green px-3 text-xs font-bold text-white disabled:opacity-40"
           >
             {flow.status === "verifying" ? "Verifying..." : "Verify"}
@@ -104,7 +104,7 @@ export function PhoneOtpVerifier({
       {flow.status === "sent" || flow.status === "verifying" ? (
         <div className="mt-1.5 text-[10.5px] text-brand-sub">
           {canResend ? (
-            <button type="button" onClick={() => void flow.send()} className="font-bold text-brand-green-dark">
+            <button type="button" onClick={flow.resend} className="font-bold text-brand-green-dark">
               Resend OTP
             </button>
           ) : (

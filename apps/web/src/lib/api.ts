@@ -134,17 +134,13 @@ export function loginCustomerWithOtp(dto: { phone: string; verificationId: strin
   return authFetch<AuthResponse>("/auth/login/otp", null, { method: "POST", body: JSON.stringify(dto) });
 }
 
-export function sendOtp(phone: string, purpose: OtpPurpose) {
-  return authFetch<{ status: string; expiresAt: string }>("/auth/otp/send", null, {
+// The OTP itself is sent/verified client-side by MSG91's Widget SDK
+// (window.sendOtp/verifyOtp) - this only redeems the resulting
+// access-token server-side to get a verificationId register/login can use.
+export function verifyWidgetOtp(phone: string, purpose: OtpPurpose, accessToken: string) {
+  return authFetch<{ status: string; verificationId: string }>("/auth/otp/verify-widget", null, {
     method: "POST",
-    body: JSON.stringify({ phone, purpose }),
-  });
-}
-
-export function verifyOtp(phone: string, purpose: OtpPurpose, otp: string) {
-  return authFetch<{ status: string; verificationId: string }>("/auth/otp/verify", null, {
-    method: "POST",
-    body: JSON.stringify({ phone, purpose, otp }),
+    body: JSON.stringify({ phone, purpose, accessToken }),
   });
 }
 

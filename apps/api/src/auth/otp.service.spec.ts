@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Mock } from "jest-mock";
-import { BadRequestException, HttpException } from "@nestjs/common";
+import { BadRequestException } from "@nestjs/common";
 import type { OtpPurpose } from "@prisma/client";
 import { OtpService } from "./otp.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -38,100 +38,62 @@ describe("OtpService", () => {
   let service: OtpService;
   let prisma: {
     phoneOtpVerification: {
-      findMany: Mock<AsyncFn<OtpRow[]>>;
-      findFirst: Mock<AsyncFn<OtpRow | null>>;
       findUnique: Mock<AsyncFn<OtpRow | null>>;
       create: Mock<AsyncFn<OtpRow>>;
       update: Mock<AsyncFn<OtpRow>>;
     };
   };
-  let msg91: { sendOtp: Mock<AsyncFn<void>>; verifyOtp: Mock<AsyncFn<boolean>> };
+  let msg91: { verifyWidgetAccessToken: Mock<AsyncFn<string | null>> };
 
   beforeEach(() => {
     prisma = {
       phoneOtpVerification: {
-        findMany: jest.fn<AsyncFn<OtpRow[]>>().mockResolvedValue([]),
-        findFirst: jest.fn<AsyncFn<OtpRow | null>>(),
         findUnique: jest.fn<AsyncFn<OtpRow | null>>(),
-        create: jest.fn<AsyncFn<OtpRow>>().mockResolvedValue(otpRow()),
+        create: jest.fn<AsyncFn<OtpRow>>().mockResolvedValue(otpRow({ verified: true, verifiedAt: new Date() })),
         update: jest.fn<AsyncFn<OtpRow>>().mockImplementation(() => Promise.resolve(otpRow())),
       },
     };
     msg91 = {
-      sendOtp: jest.fn<AsyncFn<void>>().mockResolvedValue(undefined),
-      verifyOtp: jest.fn<AsyncFn<boolean>>().mockResolvedValue(true),
+      verifyWidgetAccessToken: jest.fn<AsyncFn<string | null>>().mockResolvedValue("919876543210"),
     };
     service = new OtpService(prisma as unknown as PrismaService, msg91 as unknown as Msg91Client);
   });
 
-  describe("sendOtp", () => {
-    it("normalizes the phone before calling MSG91", async () => {
-      await service.sendOtp("9876543210", "REGISTER");
-      expect(msg91.sendOtp).toHaveBeenCalledWith("919876543210");
-    });
-
+  describe("verifyWidgetToken", () => {
     it("rejects an invalid phone number before ever calling MSG91", async () => {
-      await expect(service.sendOtp("12345", "REGISTER")).rejects.toThrow(BadRequestException);
-      expect(msg91.sendOtp).not.toHaveBeenCalled();
+      await expect(service.verifyWidgetToken("12345", "REGISTER", "jwt")).rejects.toThrow(BadRequestException);
+      expect(msg91.verifyWidgetAccessToken).not.toHaveBeenCalled();
     });
 
-    it("throttles a resend within the cooldown window", async () => {
-      prisma.phoneOtpVerification.findMany.mockResolvedValue([otpRow({ requestedAt: new Date() })]);
-      await expect(service.sendOtp("9876543210", "REGISTER")).rejects.toThrow(HttpException);
-      expect(msg91.sendOtp).not.toHaveBeenCalled();
+    it("rejects when MSG91 rejects the access-token", async () => {
+      msg91.verifyWidgetAccessToken.mockResolvedValue(null);
+      await expect(service.verifyWidgetToken("9876543210", "REGISTER", "bad-jwt")).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.phoneOtpVerification.create).not.toHaveBeenCalled();
     });
 
-    it("rejects once the per-window request cap is reached", async () => {
-      const old = new Date(Date.now() - 5 * 60 * 1000);
-      prisma.phoneOtpVerification.findMany.mockResolvedValue([
-        otpRow({ id: "a", requestedAt: old }),
-        otpRow({ id: "b", requestedAt: old }),
-        otpRow({ id: "c", requestedAt: old }),
-      ]);
-      await expect(service.sendOtp("9876543210", "REGISTER")).rejects.toThrow(HttpException);
+    it("rejects when the MSG91-verified phone does not match the claimed phone", async () => {
+      msg91.verifyWidgetAccessToken.mockResolvedValue("919999999999");
+      await expect(service.verifyWidgetToken("9876543210", "REGISTER", "jwt")).rejects.toThrow(BadRequestException);
+      expect(prisma.phoneOtpVerification.create).not.toHaveBeenCalled();
     });
 
-    it("creates a PhoneOtpVerification row after MSG91 accepts the send", async () => {
-      await service.sendOtp("9876543210", "LOGIN");
+    it("matches after normalizing both sides, even if MSG91 returns a bare 10-digit number", async () => {
+      msg91.verifyWidgetAccessToken.mockResolvedValue("9876543210");
+      await service.verifyWidgetToken("9876543210", "REGISTER", "jwt");
+      expect(prisma.phoneOtpVerification.create).toHaveBeenCalled();
+    });
+
+    it("creates an already-verified row and returns its id once MSG91 confirms a matching phone", async () => {
+      prisma.phoneOtpVerification.create.mockResolvedValue(otpRow({ id: "otp-99", verified: true }));
+
+      const result = await service.verifyWidgetToken("9876543210", "LOGIN", "jwt");
+
+      expect(result).toEqual({ verificationId: "otp-99" });
       expect(prisma.phoneOtpVerification.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ phone: "919876543210", purpose: "LOGIN" }) }),
-      );
-    });
-  });
-
-  describe("verifyOtp", () => {
-    it("rejects when there is no pending OTP for this phone/purpose", async () => {
-      prisma.phoneOtpVerification.findFirst.mockResolvedValue(null);
-      await expect(service.verifyOtp("9876543210", "REGISTER", "1234")).rejects.toThrow(BadRequestException);
-    });
-
-    it("rejects once max verify attempts are exhausted", async () => {
-      prisma.phoneOtpVerification.findFirst.mockResolvedValue(otpRow({ attempts: 5 }));
-      await expect(service.verifyOtp("9876543210", "REGISTER", "1234")).rejects.toThrow(BadRequestException);
-      expect(msg91.verifyOtp).not.toHaveBeenCalled();
-    });
-
-    it("increments attempts and rejects when MSG91 says the OTP is wrong", async () => {
-      prisma.phoneOtpVerification.findFirst.mockResolvedValue(otpRow({ attempts: 1 }));
-      msg91.verifyOtp.mockResolvedValue(false);
-
-      await expect(service.verifyOtp("9876543210", "REGISTER", "0000")).rejects.toThrow(BadRequestException);
-      expect(prisma.phoneOtpVerification.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { attempts: { increment: 1 } } }),
-      );
-    });
-
-    it("marks the row verified and returns its id when MSG91 confirms the OTP", async () => {
-      prisma.phoneOtpVerification.findFirst.mockResolvedValue(otpRow({ id: "otp-77" }));
-      prisma.phoneOtpVerification.update.mockResolvedValue(otpRow({ id: "otp-77", verified: true }));
-
-      const result = await service.verifyOtp("9876543210", "REGISTER", "1234");
-
-      expect(result).toEqual({ verificationId: "otp-77" });
-      expect(prisma.phoneOtpVerification.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: "otp-77" },
-          data: expect.objectContaining({ verified: true }),
+          data: expect.objectContaining({ phone: "919876543210", purpose: "LOGIN", verified: true }),
         }),
       );
     });

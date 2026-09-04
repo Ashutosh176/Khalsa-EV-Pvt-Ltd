@@ -1,26 +1,20 @@
 import { Body, Controller, HttpCode, Post } from "@nestjs/common";
 import { OtpService } from "./otp.service";
-import { SendOtpDto } from "./dto/send-otp.dto";
-import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { VerifyWidgetTokenDto } from "./dto/verify-widget-token.dto";
 
-// Public endpoints (no auth): OTP send/verify happens before a session
-// exists, both at registration and for OTP-based login. Abuse is
-// bounded by OtpService's per-phone rate limiting rather than a guard.
+// Public endpoint (no auth): the phone is verified before a session
+// exists, both at registration and for OTP-based login. Send/retry/
+// verify of the actual OTP happen client-side via MSG91's Widget SDK -
+// this is the only server-side step, redeeming the resulting
+// access-token.
 @Controller("auth/otp")
 export class OtpController {
   constructor(private readonly otpService: OtpService) {}
 
-  @Post("send")
+  @Post("verify-widget")
   @HttpCode(200)
-  async send(@Body() dto: SendOtpDto) {
-    const { expiresAt } = await this.otpService.sendOtp(dto.phone, dto.purpose);
-    return { status: "sent", expiresAt };
-  }
-
-  @Post("verify")
-  @HttpCode(200)
-  async verify(@Body() dto: VerifyOtpDto) {
-    const { verificationId } = await this.otpService.verifyOtp(dto.phone, dto.purpose, dto.otp);
+  async verifyWidget(@Body() dto: VerifyWidgetTokenDto) {
+    const { verificationId } = await this.otpService.verifyWidgetToken(dto.phone, dto.purpose, dto.accessToken);
     return { status: "verified", verificationId };
   }
 }
