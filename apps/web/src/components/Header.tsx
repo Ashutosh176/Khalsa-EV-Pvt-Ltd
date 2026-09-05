@@ -65,14 +65,14 @@ export function Header() {
 
       <div className="mx-auto flex max-w-[1440px] items-center gap-[22px] border-b border-brand-line px-4 py-3.5 sm:px-7">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-9 w-auto" priority />
+          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-[48px] w-auto" priority />
         </Link>
 
-        <form onSubmit={handleSearch} className="hidden max-w-[640px] flex-1 md:flex">
+        <form onSubmit={handleSearch} className="hidden w-[560px] md:ml-auto md:flex">
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="rounded-l-lg border border-r-0 border-brand-line bg-brand-surface px-2.5 text-[12.5px] text-brand-sub outline-none"
+            className="w-[160px] shrink-0 truncate rounded-l-lg border border-r-0 border-brand-line bg-brand-surface px-2.5 text-[13px] text-brand-sub outline-none"
           >
             <option value="">All Categories</option>
             {categories.map((category) => (
@@ -96,17 +96,17 @@ export function Header() {
           </button>
         </form>
 
-        <div className="ml-auto flex shrink-0 items-center gap-[22px]">
-          <Link href="/account/orders" className="hidden flex-col items-center gap-0.5 text-[11px] text-brand-ink lg:flex">
-            <span className="text-[17px] leading-none">🚚</span>
+        <div className="flex shrink-0 items-center gap-[23px]">
+          <Link href="/account/orders" className="hidden items-center gap-1.5 text-[13.8px] text-brand-ink lg:flex">
+            <span className="text-[20.4px] leading-none">🚚</span>
             Track Order
           </Link>
-          <Link href="/wishlist" className="hidden flex-col items-center gap-0.5 text-[11px] text-brand-ink sm:flex">
-            <span className="text-[17px] leading-none">♡</span>
+          <Link href="/wishlist" className="hidden items-center gap-1.5 text-[13.8px] text-brand-ink sm:flex">
+            <span className="text-[20.4px] leading-none">💗</span>
             Wishlist
           </Link>
-          <Link href="/cart" className="relative flex flex-col items-center gap-0.5 text-[11px] text-brand-ink">
-            <span className="text-[17px] leading-none">🛒</span>
+          <Link href="/cart" className="relative flex items-center gap-1.5 text-[13.8px] text-brand-ink">
+            <span className="text-[20.4px] leading-none">🛒</span>
             Cart
             {cart && cart.itemCount > 0 ? (
               <span className="absolute -right-2.5 -top-1.5 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-green text-[9px] font-bold text-white">
@@ -116,14 +116,10 @@ export function Header() {
           </Link>
 
           {user ? (
-            <div className="flex items-center gap-3">
-              <Link href="/account" className="relative flex flex-col items-center gap-0.5 text-[11px] text-brand-ink">
-                <span className="text-[17px] leading-none">👤</span>
-                <span>
-                  Hi, {user.name.split(" ")[0]}
-                  <br />
-                  My Account
-                </span>
+            <div className="flex items-center gap-[12.5px]">
+              <Link href="/account" className="relative flex items-center gap-1.5 text-[13.8px] text-brand-ink">
+                <span className="text-[20.4px] leading-none">👤</span>
+                <span>My Account</span>
                 {unreadCount > 0 ? (
                   <span className="absolute -right-2.5 -top-1.5 flex h-[15px] w-[15px] items-center justify-center rounded-full bg-brand-red text-[9px] font-bold text-white">
                     {unreadCount}
@@ -163,7 +159,7 @@ export function Header() {
       </form>
 
       <nav className="hidden border-b border-brand-line lg:block">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-[22px] px-7 py-3 text-[12.8px] font-semibold text-[#33373A]">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-end gap-[22px] px-7 py-3 text-[12.8px] font-semibold text-[#33373A]">
           {categories.map((category) => (
             <Link
               key={category.id}

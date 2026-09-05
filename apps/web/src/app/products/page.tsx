@@ -169,7 +169,7 @@ export default async function ProductsPage({
               No products match your search yet.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {catalog.items.map((product) => (
                 <CatalogProductCard
                   key={product.id}

@@ -62,8 +62,11 @@ export function useOtpFlow(purpose: OtpPurpose) {
 
   const resend = useCallback(() => {
     setError(null);
+    // The widget throws synchronously (bypassing the failure callback
+    // entirely) if channel is omitted - "11" is its code for SMS, the
+    // only channel this flow ever sends through.
     window.retryOtp?.(
-      null,
+      "11",
       () => setCooldownUntil(Date.now() + OTP_RESEND_COOLDOWN_SECONDS * 1000),
       (err) => setError(extractWidgetMessage(err) ?? "Could not resend OTP. Please try again."),
     );

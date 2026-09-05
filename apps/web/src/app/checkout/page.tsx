@@ -14,15 +14,28 @@ import { getAddresses, createOrder } from "../../lib/api";
 const FREE_SHIPPING_THRESHOLD_PAISE = 299900;
 const FLAT_SHIPPING_FEE_PAISE = 9900;
 
+// createFromCart rejects with the offending product name embedded in the
+// message (e.g. `"X" is no longer available`, `Insufficient stock for
+// "X"`) rather than a structured product/item id - this pulls the name
+// back out so the UI can point at the exact cart line instead of just
+// showing the raw error text with no way to act on it.
+function findErrorItemId(message: string, items: { id: string; product: { name: string } }[]): string | null {
+  const name = message.match(/"([^"]+)"/)?.[1];
+  if (!name) return null;
+  return items.find((item) => item.product.name === name)?.id ?? null;
+}
+
 export default function CheckoutPage() {
   const { user, accessToken, loading: authLoading } = useAuth();
-  const { cart, loading: cartLoading, refresh: refreshCart } = useCart();
+  const { cart, loading: cartLoading, refresh: refreshCart, removeItem } = useCart();
   const router = useRouter();
 
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorItemId, setErrorItemId] = useState<string | null>(null);
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -49,14 +62,29 @@ export default function CheckoutPage() {
   async function handlePlaceOrder() {
     if (!accessToken || !selectedAddressId) return;
     setError(null);
+    setErrorItemId(null);
     setPlacing(true);
     try {
       const order = await createOrder(accessToken, { shippingAddressId: selectedAddressId });
       await refreshCart();
       router.push(`/account/orders/${order.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not place order");
+      const message = err instanceof Error ? err.message : "Could not place order";
+      setError(message);
+      setErrorItemId(findErrorItemId(message, activeItems));
       setPlacing(false);
+    }
+  }
+
+  async function handleRemoveErrorItem() {
+    if (!errorItemId) return;
+    setRemovingItemId(errorItemId);
+    try {
+      await removeItem(errorItemId);
+      setError(null);
+      setErrorItemId(null);
+    } finally {
+      setRemovingItemId(null);
     }
   }
 
@@ -168,24 +196,41 @@ export default function CheckoutPage() {
                   </Link>
                 </div>
                 <div className="mt-3 space-y-2.5">
-                  {activeItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-2.5">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand-line bg-gradient-to-br from-[#F2F4F1] to-[#E4E9E3] text-base">
-                        {item.product.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element -- product images are remote
-                          <img src={item.product.imageUrl} alt={item.product.name} className="h-full w-full rounded-lg object-cover" />
+                  {activeItems.map((item) => {
+                    const hasError = item.id === errorItemId;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`flex items-center gap-2.5 ${hasError ? "rounded-lg bg-red-50 p-1.5" : ""}`}
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-brand-line bg-gradient-to-br from-[#F2F4F1] to-[#E4E9E3] text-base">
+                          {item.product.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- product images are remote
+                            <img src={item.product.imageUrl} alt={item.product.name} className="h-full w-full rounded-lg object-cover" />
+                          ) : (
+                            "🔧"
+                          )}
+                        </div>
+                        <div className="flex-1 text-[11.8px]">
+                          {item.product.name}
+                          <br />
+                          <span className="text-brand-sub">Qty: {item.quantity}</span>
+                        </div>
+                        {hasError ? (
+                          <button
+                            type="button"
+                            onClick={handleRemoveErrorItem}
+                            disabled={removingItemId === item.id}
+                            className="text-[11px] font-semibold text-brand-red underline disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {removingItemId === item.id ? "Removing..." : "Remove"}
+                          </button>
                         ) : (
-                          "🔧"
+                          <b className="text-xs">{formatIndianRupees(item.lineTotal)}</b>
                         )}
                       </div>
-                      <div className="flex-1 text-[11.8px]">
-                        {item.product.name}
-                        <br />
-                        <span className="text-brand-sub">Qty: {item.quantity}</span>
-                      </div>
-                      <b className="text-xs">{formatIndianRupees(item.lineTotal)}</b>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <div className="mt-3 space-y-1.5 border-t border-brand-line pt-3 text-xs">
                   <div className="flex justify-between text-brand-sub">

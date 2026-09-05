@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Tailwind v4 auto-scans this app's own tree only - shared components
+   in packages/ui live outside it, so any class used ONLY there (never
+   duplicated in apps/web source) silently generates no CSS. */
+@source "../../../../packages/ui/src";
+
 /* Design tokens matching the approved Figma reference
    (Khalsa_EV_Spare_Parts_Figma_Screens.html). */
 @theme {

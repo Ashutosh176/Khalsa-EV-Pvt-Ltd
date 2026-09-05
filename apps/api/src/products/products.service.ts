@@ -1,9 +1,12 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, ProductStatus, ProductType } from "@prisma/client";
 import { slugify } from "@khalsa-ev/utils";
 import { PrismaService } from "../prisma/prisma.service";
 import { isUniqueConstraintError } from "../common/prisma-error";
 import { DEFAULT_WAREHOUSE_CODE } from "../common/constants";
+import { UPLOADS_DIR, PRODUCT_IMAGES_SUBDIR, toPublicImageUrl } from "../common/uploads";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ListProductsQuery } from "./dto/list-products.query";
@@ -206,6 +209,54 @@ export class ProductsService {
       data: { status: ProductStatus.ARCHIVED },
       include: PRODUCT_INCLUDE,
     });
+  }
+
+  // Files are already written to disk (by multer's diskStorage, before
+  // this runs) under UPLOADS_DIR/PRODUCT_IMAGES_SUBDIR/<productId>/ - this
+  // just records them, in upload order, after the highest existing
+  // sortOrder for this product.
+  async addImages(productId: string, files: Express.Multer.File[]) {
+    await this.findOne(productId);
+    if (files.length === 0) {
+      throw new BadRequestException("No image files were uploaded");
+    }
+
+    const last = await this.prisma.productImage.findFirst({
+      where: { productId },
+      orderBy: { sortOrder: "desc" },
+    });
+    let nextSortOrder = (last?.sortOrder ?? -1) + 1;
+
+    await this.prisma.productImage.createMany({
+      data: files.map((file) => ({
+        productId,
+        url: toPublicImageUrl(productId, file.filename),
+        sortOrder: nextSortOrder++,
+      })),
+    });
+
+    return this.findOne(productId);
+  }
+
+  async removeImage(productId: string, imageId: string) {
+    const image = await this.prisma.productImage.findUnique({ where: { id: imageId } });
+    if (!image || image.productId !== productId) {
+      throw new NotFoundException(`Image ${imageId} not found on product ${productId}`);
+    }
+
+    await this.prisma.productImage.delete({ where: { id: imageId } });
+
+    const filename = image.url.split("/").pop();
+    if (filename) {
+      const filePath = path.join(UPLOADS_DIR, PRODUCT_IMAGES_SUBDIR, productId, filename);
+      // Best-effort: the DB row is the source of truth for what's "the
+      // product's images" - a leftover orphan file on disk is harmless,
+      // so a failed unlink (already gone, permissions, etc.) shouldn't
+      // fail the request.
+      await fs.unlink(filePath).catch(() => undefined);
+    }
+
+    return this.findOne(productId);
   }
 
   private async generateUniqueSlug(source: string): Promise<string> {

@@ -12,7 +12,10 @@ declare global {
       reqId?: string,
     ) => void;
     retryOtp?: (
-      channel: string | null,
+      // Required, despite MSG91's own typings marking it optional - an
+      // omitted/null channel throws synchronously instead of calling
+      // `failure`. "11" is SMS, the only channel this flow uses.
+      channel: string,
       success?: (data: unknown) => void,
       failure?: (error: unknown) => void,
       reqId?: string,

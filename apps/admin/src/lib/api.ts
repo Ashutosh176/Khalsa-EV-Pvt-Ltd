@@ -110,6 +110,33 @@ export function archiveProduct(accessToken: string, id: string) {
   return authFetch<AdminProduct>(`/admin/products/${id}`, accessToken, { method: "DELETE" });
 }
 
+// Multipart upload - deliberately bypasses authFetch, which hardcodes
+// Content-Type: application/json. fetch() sets the correct
+// multipart/form-data boundary itself when the body is a FormData, but
+// only if we don't set Content-Type manually.
+export async function uploadProductImages(accessToken: string, id: string, files: File[]): Promise<AdminProduct> {
+  const formData = new FormData();
+  for (const file of files) formData.append("files", file);
+
+  const response = await fetch(`${API_URL}/admin/products/${id}/images`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    credentials: "include",
+    body: formData,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new ApiError(body?.message ?? `Image upload failed with ${response.status}`, response.status);
+  }
+  return response.json() as Promise<AdminProduct>;
+}
+
+export function deleteProductImage(accessToken: string, productId: string, imageId: string) {
+  return authFetch<AdminProduct>(`/admin/products/${productId}/images/${imageId}`, accessToken, {
+    method: "DELETE",
+  });
+}
+
 export function getCategories() {
   return authFetch<Category[]>("/categories", null);
 }

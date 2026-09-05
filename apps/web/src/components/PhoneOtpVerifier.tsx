@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOtpFlow } from "../lib/useOtpFlow";
 import type { OtpPurpose } from "../lib/api";
 
@@ -127,10 +127,20 @@ function VerifiedNotifier({
   verificationId: string;
   onVerified?: (phone: string, verificationId: string) => void;
 }) {
+  // Our own consumeVerification() enforces this server-side too, but
+  // React's StrictMode double-invokes effects with no cleanup in dev,
+  // which fired this twice per verification and let the second
+  // (server-rejected, since the first already consumed it) call's
+  // error overwrite the first call's successful login. The ref makes
+  // this idempotent per verificationId regardless of how many times
+  // the effect body runs.
+  const notifiedFor = useRef<string | null>(null);
   useEffect(() => {
+    if (notifiedFor.current === verificationId) return;
+    notifiedFor.current = verificationId;
     onVerified?.(phone, verificationId);
-    // Runs once per fresh verificationId - onVerified is a stable
-    // per-render closure from the parent, not a dependency we track.
+    // onVerified is a stable per-render closure from the parent, not a
+    // dependency we track.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verificationId]);
   return null;

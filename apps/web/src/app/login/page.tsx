@@ -2,10 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@khalsa-ev/ui";
-import { Header } from "../../components/Header";
-import { Footer } from "../../components/Footer";
 import { PhoneOtpVerifier } from "../../components/PhoneOtpVerifier";
 import { useAuth } from "../../lib/auth-context";
 
@@ -54,10 +53,11 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-white text-brand-ink">
-      <Header />
-
-      <div className="flex flex-col lg:min-h-[560px] lg:flex-row">
+      <div className="flex flex-col lg:min-h-screen lg:flex-row">
         <div className="hidden flex-col justify-center bg-gradient-to-br from-[#EEF5EC] to-white p-12 lg:flex lg:flex-1">
+          <Link href="/" className="mb-6 flex items-center">
+            <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-10 w-auto" priority />
+          </Link>
           <div className="text-[26px] font-extrabold leading-tight">
             Powering Every
             <br />
@@ -159,8 +159,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </main>
   );
 }

@@ -24,7 +24,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
   if (!user) return null; // redirecting
 
   return (
-    <div className="flex min-h-screen bg-brand-surface">
+    // h-screen (not min-h-screen) + overflow-hidden bounds this row to the
+    // viewport, so <main>'s overflow-y-auto actually scrolls internally
+    // instead of the whole page growing past the viewport and dragging
+    // the sidebar along with it.
+    <div className="flex h-screen overflow-hidden bg-brand-surface">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>

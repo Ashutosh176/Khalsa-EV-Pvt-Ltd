@@ -8,3 +8,5 @@ coverage/
 apps/api/generated/
 tmp/
 *.tsbuildinfo
+apps/web/.certs/
+apps/api/uploads/

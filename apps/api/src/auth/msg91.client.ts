@@ -1,4 +1,5 @@
-import { BadGatewayException, Injectable } from "@nestjs/common";
+import { createHash } from "node:crypto";
+import { BadGatewayException, Injectable, Logger } from "@nestjs/common";
 import { requireEnv } from "../common/env";
 
 // MSG91 OTP Widget (https://docs.msg91.com/otp-widget). The widget's
@@ -14,18 +15,27 @@ type Msg91VerifyResponse = { type: "success" | "error"; message: unknown };
 
 @Injectable()
 export class Msg91Client {
+  private readonly logger = new Logger(Msg91Client.name);
   // Returns the verified mobile number MSG91 associates with this
   // access-token, or null if MSG91 rejects the token (expired, already
   // consumed, or never issued) - a rejected token is an expected
   // outcome, not a system failure, so this returns null rather than
   // throwing.
   async verifyWidgetAccessToken(accessToken: string): Promise<string | null> {
+    const authkey = requireEnv("MSG91_AUTH_KEY");
+    // Temporary diagnostic: confirms the runtime process is actually
+    // sending the same key that's in .env, without ever logging the key
+    // itself - remove once the widget-token redemption failure
+    // investigated on 2026-09-04 is resolved.
+    this.logger.warn(
+      `outgoing authkey fingerprint: ${createHash("sha256").update(authkey).digest("hex").slice(0, 16)} | length: ${authkey.length}`,
+    );
     let response: Response;
     try {
       response = await fetch(MSG91_VERIFY_ACCESS_TOKEN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ authkey: requireEnv("MSG91_AUTH_KEY"), "access-token": accessToken }),
+        body: JSON.stringify({ authkey, "access-token": accessToken }),
       });
     } catch (error) {
       throw new BadGatewayException(`Could not reach MSG91: ${(error as Error).message}`);
@@ -36,6 +46,10 @@ export class Msg91Client {
       throw new BadGatewayException("MSG91 returned an unreadable response");
     }
     if (body.type !== "success") {
+      // Temporary diagnostic: MSG91's verifyAccessToken failure reason
+      // isn't otherwise visible anywhere - remove once the widget-token
+      // redemption failure investigated on 2026-09-04 is resolved.
+      this.logger.warn(`verifyWidgetAccessToken rejected: ${JSON.stringify(body)}`);
       return null;
     }
     return extractMobile(body.message);

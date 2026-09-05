@@ -20,7 +20,21 @@ import type {
 
 // Falls back to the local API's default port for zero-config dev; set
 // NEXT_PUBLIC_API_URL in the deploy environment for staging/production.
+// Used by apiFetch, which also runs in Server Components (Node has no
+// "current page" to resolve a relative URL against, so this must be
+// absolute).
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
+
+// authFetch only ever runs in the browser (every caller carries the
+// httpOnly refresh/access-token cookie via credentials: "include"), so
+// it can - and must - go through this app's own origin rather than
+// API_URL directly. Calling the API's absolute origin straight from
+// the browser makes the cookie cross-site (different hostname, not
+// just a different port) whenever the app isn't served from
+// "localhost", which requires SameSite=None; Secure - Secure needs
+// HTTPS, which the API doesn't run. next.config.ts rewrites this path
+// to the real API so the cookie stays same-site.
+const AUTH_API_URL = "/api/v1";
 
 class ApiError extends Error {
   constructor(
@@ -52,7 +66,7 @@ async function authFetch<T>(path: string, accessToken: string | null, init?: Req
   };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers, credentials: "include" });
+  const response = await fetch(`${AUTH_API_URL}${path}`, { ...init, headers, credentials: "include" });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new ApiError(body?.message ?? `Request to ${path} failed with ${response.status}`, response.status);
