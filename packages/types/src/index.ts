@@ -45,6 +45,29 @@ export type ProductImage = {
   sortOrder: number;
 };
 
+// 1:1 extension of CatalogProduct when productType is SCOOTER - see
+// ScooterSpecification in schema.prisma. Absent on spare parts/accessories.
+export type ScooterSpecification = {
+  model: string;
+  batteryCapacityAh: number | null;
+  batteryCapacityWh: number | null;
+  batteryType: "LI_ION" | "LFP";
+  motorPowerW: number;
+  topSpeedKmh: number;
+  rangeKm: number;
+  chargingTimeHours: number;
+  brakingType: string | null;
+  tyreType: string | null;
+  tyreSize: string | null;
+  suspension: string | null;
+  kerbWeightKg: number | null;
+  loadCapacityKg: number | null;
+  seatHeightMm: number | null;
+  groundClearanceMm: number | null;
+  warrantyTerms: string | null;
+  highlightFeatures: string[] | null;
+};
+
 export type CatalogProduct = {
   id: string;
   slug: string;
@@ -61,6 +84,7 @@ export type CatalogProduct = {
   category: Category;
   brand: Brand | null;
   images: ProductImage[];
+  scooterSpec: ScooterSpecification | null;
   inStock: boolean;
   availableStock: number;
 };

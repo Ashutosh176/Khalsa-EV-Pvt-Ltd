@@ -6,14 +6,19 @@ import { formatIndianRupees } from "@khalsa-ev/utils";
 import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
 import { ProductCardActions } from "../../../components/ProductCardActions";
+import { ProductGallery } from "../../../components/ProductGallery";
+import { ProductBuyBox } from "../../../components/ProductBuyBox";
+import { ProductTabs } from "../../../components/ProductTabs";
 import { getCatalogProduct, getCatalogProducts } from "../../../lib/api";
-import { ProductGallery } from "./ProductGallery";
-import { ProductBuyBox } from "./ProductBuyBox";
-import { ProductTabs } from "./ProductTabs";
 
+// Scooters live at /electric-scooters/products/[slug] instead (Section 60) -
+// even though they're rows in the same Product table, a scooter slug must
+// 404 here rather than render through the spare-parts template, so the two
+// sections stay genuinely separate rather than just visually different.
 async function loadProduct(slug: string) {
   try {
-    return await getCatalogProduct(slug);
+    const product = await getCatalogProduct(slug);
+    return product.productType === "SPARE_PART" ? product : null;
   } catch {
     return null;
   }
@@ -37,9 +42,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const discountPercent = product.mrp > product.price ? Math.round((1 - product.price / product.mrp) * 100) : 0;
   const specEntries = product.specifications ? Object.entries(product.specifications) : [];
 
-  const related = (await getCatalogProducts({ categoryId: product.category.id, pageSize: 5 })).items.filter(
-    (p) => p.id !== product.id,
-  );
+  const related = (
+    await getCatalogProducts({ productType: "SPARE_PART", categoryId: product.category.id, pageSize: 5 })
+  ).items.filter((p) => p.id !== product.id);
 
   const rawTabs: ({ label: string; content: ReactNode } | null)[] = [
     specEntries.length > 0

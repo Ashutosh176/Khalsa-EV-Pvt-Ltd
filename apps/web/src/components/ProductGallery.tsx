@@ -3,7 +3,15 @@
 import { useState } from "react";
 import type { ProductImage } from "@khalsa-ev/types";
 
-export function ProductGallery({ images, name }: { images: ProductImage[]; name: string }) {
+export function ProductGallery({
+  images,
+  name,
+  fallbackIcon = "🔧",
+}: {
+  images: ProductImage[];
+  name: string;
+  fallbackIcon?: string;
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const active = images[activeIndex];
 
@@ -32,7 +40,7 @@ export function ProductGallery({ images, name }: { images: ProductImage[]; name:
           // eslint-disable-next-line @next/next/no-img-element -- product images are remote
           <img src={active.url} alt={active.altText ?? name} className="h-full w-full object-cover" />
         ) : (
-          <span className="text-8xl">🔧</span>
+          <span className="text-8xl">{fallbackIcon}</span>
         )}
       </div>
     </div>

@@ -9,6 +9,7 @@ const LIST_INCLUDE = {
   brand: true,
   images: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
   inventory: true,
+  scooterSpec: true,
 } satisfies Prisma.ProductInclude;
 
 const DETAIL_INCLUDE = {
@@ -38,6 +39,7 @@ export class CatalogService {
     const where: Prisma.ProductWhereInput = {
       status: ProductStatus.ACTIVE,
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      ...(query.productType ? { productType: query.productType } : {}),
       ...(query.brandId ? { brandId: query.brandId } : {}),
       ...(query.vehicleVariantId ? { compatibility: { some: { vehicleVariantId: query.vehicleVariantId } } } : {}),
       ...(query.featured ? { isFeatured: true } : {}),

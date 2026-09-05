@@ -6,7 +6,7 @@ import { slugify } from "@khalsa-ev/utils";
 import { PrismaService } from "../prisma/prisma.service";
 import { isUniqueConstraintError } from "../common/prisma-error";
 import { DEFAULT_WAREHOUSE_CODE } from "../common/constants";
-import { UPLOADS_DIR, PRODUCT_IMAGES_SUBDIR, toPublicImageUrl } from "../common/uploads";
+import { getUploadsDir, PRODUCT_IMAGES_SUBDIR, toPublicImageUrl } from "../common/uploads";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
 import { ListProductsQuery } from "./dto/list-products.query";
@@ -248,7 +248,7 @@ export class ProductsService {
 
     const filename = image.url.split("/").pop();
     if (filename) {
-      const filePath = path.join(UPLOADS_DIR, PRODUCT_IMAGES_SUBDIR, productId, filename);
+      const filePath = path.join(getUploadsDir(), PRODUCT_IMAGES_SUBDIR, productId, filename);
       // Best-effort: the DB row is the source of truth for what's "the
       // product's images" - a leftover orphan file on disk is harmless,
       // so a failed unlink (already gone, permissions, etc.) shouldn't

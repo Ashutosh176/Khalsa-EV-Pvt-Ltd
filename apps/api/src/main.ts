@@ -5,7 +5,7 @@ import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
-import { UPLOADS_DIR } from "./common/uploads";
+import { getUploadsDir } from "./common/uploads";
 
 async function bootstrap() {
   config({ path: path.resolve(__dirname, "../../../.env") });
@@ -15,7 +15,7 @@ async function bootstrap() {
   // Local disk storage for product images until STORAGE_* (S3-compatible)
   // credentials are configured for a real phase - see .env's comment on
   // those vars. Served outside the api/v1 prefix as plain static files.
-  app.useStaticAssets(UPLOADS_DIR, { prefix: "/uploads/" });
+  app.useStaticAssets(getUploadsDir(), { prefix: "/uploads/" });
   app.enableCors({
     origin: [
       "http://localhost:3000",

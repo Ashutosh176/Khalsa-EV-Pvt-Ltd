@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@khalsa-ev/ui";
 import { formatIndianRupees } from "@khalsa-ev/utils";
-import { useAuth } from "../../../lib/auth-context";
-import { useCart } from "../../../lib/cart-context";
-import { addWishlistItem } from "../../../lib/api";
+import { useAuth } from "../lib/auth-context";
+import { useCart } from "../lib/cart-context";
+import { addWishlistItem } from "../lib/api";
 
 export function ProductBuyBox({
   productId,

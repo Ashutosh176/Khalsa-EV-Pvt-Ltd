@@ -6,7 +6,14 @@ import path from "node:path";
 // (built) - both two levels under apps/api, so "../../uploads" always
 // resolves to apps/api/uploads regardless of which is running. Gitignored
 // since it's runtime-generated content.
-export const UPLOADS_DIR = path.resolve(__dirname, "../../uploads");
+//
+// Computed lazily, not as a top-level constant: this module is imported
+// (transitively, via ProductsService) by unit tests that run under Jest's
+// ESM mode, where __dirname doesn't exist - a top-level `path.resolve(
+// __dirname, ...)` would throw on import alone, before any test even runs.
+export function getUploadsDir(): string {
+  return path.resolve(__dirname, "../../uploads");
+}
 export const PRODUCT_IMAGES_SUBDIR = "products";
 
 const API_PUBLIC_URL = process.env.API_PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`;

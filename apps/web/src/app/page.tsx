@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button, CatalogProductCard } from "@khalsa-ev/ui";
 import { Header } from "../components/Header";
@@ -12,6 +13,8 @@ import { getBrands, getCatalogProducts, getCategories } from "../lib/api";
 // at build time and never show catalog changes made afterward.
 export const revalidate = 60;
 
+const HERO_BENEFITS = ["100% Genuine Parts", "7 Days Easy Returns", "Pan India Delivery", "Secure Payments"];
+
 const WHY_CHOOSE_US = [
   ["🛡️", "100% Genuine", "Original Parts"],
   ["🔀", "Wide Compatibility", "For All Vehicles"],
@@ -24,47 +27,64 @@ const WHY_CHOOSE_US = [
 export default async function HomePage() {
   const [categories, brands, featuredResult] = await Promise.all([
     getCategories(),
-    getBrands(),
-    getCatalogProducts({ featured: true, pageSize: 6 }),
+    getBrands({ productType: "SPARE_PART" }),
+    getCatalogProducts({ productType: "SPARE_PART", featured: true, pageSize: 6 }),
   ]);
 
   // Falls back to the newest ACTIVE listings when nothing is marked
   // featured yet, so the homepage never renders an empty product grid.
   const products =
-    featuredResult.items.length > 0 ? featuredResult.items : (await getCatalogProducts({ sort: "newest", pageSize: 6 })).items;
+    featuredResult.items.length > 0
+      ? featuredResult.items
+      : (await getCatalogProducts({ productType: "SPARE_PART", sort: "newest", pageSize: 6 })).items;
 
   return (
     <main className="min-h-screen bg-white text-brand-ink">
       <Header />
 
-      <div className="flex items-center gap-8 bg-gradient-to-br from-[#0B0D0E] to-[#171B15] px-4 py-11 sm:px-7 lg:py-[46px]">
-        <div className="flex-1 text-white">
-          <h1 className="text-[28px] font-extrabold leading-tight sm:text-[34px]">
-            Genuine Parts.
-            <br />
-            Reliable Performance.
-            <br />
-            <span className="text-brand-green">Every Ride.</span>
-          </h1>
-          <p className="mt-3.5 max-w-[380px] text-[13px] text-[#B7BBBE]">
-            Wide range of 100% genuine EV spare parts for all leading brands.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/products">
-              <Button>Shop Now</Button>
-            </Link>
-            <Link
-              href="/find-parts"
-              className="inline-flex items-center justify-center gap-1.5 rounded-[7px] border border-white px-[18px] py-2.5 text-[13px] font-semibold text-white transition hover:bg-white/10"
-            >
-              Find Parts for Your Vehicle
-            </Link>
+      <div className="relative flex h-[440px] items-center overflow-hidden bg-[#0B0D0E] sm:h-[480px] lg:h-[540px]">
+        <Image
+          src="/hero-spare-parts-banner.png"
+          alt="Genuine Khalsa EV spare parts - brake disc, battery pack, motor, controller, headlight and tyre"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[68%_center] sm:object-[62%_center] lg:object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/10 sm:from-black/85 sm:via-black/45 sm:to-transparent" />
+
+        <div className="relative z-10 w-full px-4 sm:px-7">
+          <div className="max-w-[480px] text-white">
+            <h1 className="text-[28px] font-extrabold leading-tight sm:text-[34px] lg:text-[40px]">
+              Genuine EV Parts.
+              <br />
+              Reliable Performance.
+              <br />
+              <span className="text-brand-green">Every Ride.</span>
+            </h1>
+            <p className="mt-3.5 max-w-[380px] text-[13px] text-[#D7DAD8] sm:text-sm">
+              Wide range of 100% genuine EV spare parts for all leading brands.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href="/products">
+                <Button>Shop Now</Button>
+              </Link>
+              <Link
+                href="/find-parts"
+                className="inline-flex items-center justify-center gap-1.5 rounded-[7px] border border-white px-[18px] py-2.5 text-[13px] font-semibold text-white transition hover:bg-white/10"
+              >
+                Find Parts for Your Vehicle
+              </Link>
+            </div>
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
+              {HERO_BENEFITS.map((benefit) => (
+                <span key={benefit} className="flex items-center gap-1.5 text-[11.5px] font-semibold text-white/90">
+                  <span className="text-[10px] font-extrabold text-brand-green">✓</span>
+                  {benefit}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="hidden flex-1 justify-center gap-1.5 text-[64px] sm:flex lg:text-[80px]">
-          <span>🛵</span>
-          <span>🔋</span>
-          <span>⚙️</span>
         </div>
       </div>
 

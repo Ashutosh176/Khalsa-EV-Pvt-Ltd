@@ -21,7 +21,7 @@ import { Role } from "@prisma/client";
 import { AdminAuthGuard } from "../auth/guards/admin-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
-import { UPLOADS_DIR, PRODUCT_IMAGES_SUBDIR } from "../common/uploads";
+import { getUploadsDir, PRODUCT_IMAGES_SUBDIR } from "../common/uploads";
 import { ProductsService } from "./products.service";
 import { CreateProductDto } from "./dto/create-product.dto";
 import { UpdateProductDto } from "./dto/update-product.dto";
@@ -77,7 +77,7 @@ export class ProductsController {
       },
       storage: diskStorage({
         destination: (req, _file, callback) => {
-          const dir = path.join(UPLOADS_DIR, PRODUCT_IMAGES_SUBDIR, (req.params as { id: string }).id);
+          const dir = path.join(getUploadsDir(), PRODUCT_IMAGES_SUBDIR, (req.params as { id: string }).id);
           fs.mkdir(dir, { recursive: true })
             .then(() => callback(null, dir))
             .catch((error: unknown) => callback(error as Error, dir));

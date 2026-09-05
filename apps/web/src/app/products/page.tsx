@@ -37,8 +37,9 @@ export default async function ProductsPage({
 
   const [categories, brands, catalog] = await Promise.all([
     getCategories(),
-    getBrands(),
+    getBrands({ productType: "SPARE_PART" }),
     getCatalogProducts({
+      productType: "SPARE_PART",
       search,
       categoryId,
       brandId,

@@ -98,6 +98,8 @@ export function CatalogProductCard({
   imageUrl,
   tag,
   actions,
+  href,
+  fallbackIcon = "🔧",
 }: {
   slug: string;
   name: string;
@@ -108,8 +110,11 @@ export function CatalogProductCard({
   imageUrl?: string;
   tag?: string;
   actions?: ReactNode;
+  href?: string;
+  fallbackIcon?: string;
 }) {
   const discountPercent = mrp > price ? Math.round((1 - price / mrp) * 100) : 0;
+  const detailHref = href ?? `/products/${slug}`;
 
   return (
     <div className="relative rounded-[10px] border border-brand-line bg-white p-3">
@@ -119,13 +124,13 @@ export function CatalogProductCard({
         </span>
       ) : null}
 
-      <a href={`/products/${slug}`} className="group block">
+      <a href={detailHref} className="group block">
         <div className="flex aspect-square w-full items-center justify-center rounded-lg border border-brand-line bg-gradient-to-br from-[#F2F4F1] to-[#E4E9E3]">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- shared package, no next/image dependency
             <img src={imageUrl} alt={name} className="h-full w-full rounded-lg object-cover" />
           ) : (
-            <span className="text-4xl">🔧</span>
+            <span className="text-4xl">{fallbackIcon}</span>
           )}
         </div>
 
@@ -147,7 +152,7 @@ export function CatalogProductCard({
 
       {actions ?? (
         <a
-          href={`/products/${slug}`}
+          href={detailHref}
           className="flex w-full items-center justify-center rounded-[7px] border border-brand-line bg-white py-2 text-[13px] font-semibold text-brand-ink transition hover:border-brand-green hover:text-brand-green-dark"
         >
           View details

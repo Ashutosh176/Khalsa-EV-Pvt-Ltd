@@ -77,6 +77,7 @@ async function authFetch<T>(path: string, accessToken: string | null, init?: Req
 export type CatalogFilters = {
   search?: string;
   categoryId?: string;
+  productType?: "SPARE_PART" | "SCOOTER" | "ACCESSORY";
   brandId?: string;
   vehicleVariantId?: string;
   priceMin?: number;
@@ -108,8 +109,8 @@ export function getCategories() {
   return apiFetch<Category[]>("/categories");
 }
 
-export function getBrands() {
-  return apiFetch<Brand[]>("/brands");
+export function getBrands(filters: { productType?: "SPARE_PART" | "SCOOTER" | "ACCESSORY" } = {}) {
+  return apiFetch<Brand[]>(`/brands${toQueryString(filters)}`);
 }
 
 export function getVehicleBrands() {

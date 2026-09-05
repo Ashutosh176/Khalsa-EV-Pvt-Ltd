@@ -1,5 +1,6 @@
 import { Transform, Type } from "class-transformer";
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { ProductType } from "@prisma/client";
+import { IsBoolean, IsEnum, IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 const SORT_OPTIONS = ["newest", "price_asc", "price_desc"] as const;
 export type CatalogSort = (typeof SORT_OPTIONS)[number];
@@ -25,6 +26,13 @@ export class ListCatalogQuery {
   @IsOptional()
   @IsString()
   categoryId?: string;
+
+  // Lets the storefront's two top-level sections (spare parts vs electric
+  // scooters - Section 60) query disjoint slices of the same Product table
+  // instead of needing separate catalog endpoints.
+  @IsOptional()
+  @IsEnum(ProductType)
+  productType?: ProductType;
 
   @IsOptional()
   @IsString()

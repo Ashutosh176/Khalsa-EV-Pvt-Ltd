@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { Mock } from "jest-mock";
 import { NotFoundException } from "@nestjs/common";
+import { ProductType } from "@prisma/client";
 import { CatalogService } from "./catalog.service";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -95,6 +96,13 @@ describe("CatalogService", () => {
             compatibility: { some: { vehicleVariantId: "variant-1" } },
           }),
         }),
+      );
+    });
+
+    it("filters by productType, when given", async () => {
+      await service.findAll({ productType: ProductType.SCOOTER });
+      expect(prisma.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ productType: ProductType.SCOOTER }) }),
       );
     });
 
