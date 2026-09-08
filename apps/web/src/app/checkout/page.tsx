@@ -10,6 +10,7 @@ import { Footer } from "../../components/Footer";
 import { useAuth } from "../../lib/auth-context";
 import { useCart } from "../../lib/cart-context";
 import { getAddresses, createOrder } from "../../lib/api";
+import { useRazorpayCheckout } from "../../lib/useRazorpayCheckout";
 
 const FREE_SHIPPING_THRESHOLD_PAISE = 299900;
 const FLAT_SHIPPING_FEE_PAISE = 9900;
@@ -29,6 +30,7 @@ export default function CheckoutPage() {
   const { user, accessToken, loading: authLoading } = useAuth();
   const { cart, loading: cartLoading, refresh: refreshCart, removeItem } = useCart();
   const router = useRouter();
+  const payForOrder = useRazorpayCheckout();
 
   const [addresses, setAddresses] = useState<Address[] | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState("");
@@ -66,8 +68,16 @@ export default function CheckoutPage() {
     setPlacing(true);
     try {
       const order = await createOrder(accessToken, { shippingAddressId: selectedAddressId });
-      await refreshCart();
-      router.push(`/account/orders/${order.id}`);
+      await payForOrder(
+        accessToken,
+        order,
+        user ?? {},
+        (message) => {
+          setError(message);
+          setPlacing(false);
+        },
+        refreshCart,
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not place order";
       setError(message);
@@ -182,8 +192,7 @@ export default function CheckoutPage() {
               </div>
 
               <p className="mt-4 text-[11.5px] text-brand-sub">
-                Payment is not live yet - placing your order saves it as pending and reserves stock; you can track it from
-                your account once it&apos;s confirmed.
+                🔒 Secure payments powered by Razorpay - cards, UPI, netbanking and wallets accepted.
               </p>
             </div>
 
@@ -255,7 +264,7 @@ export default function CheckoutPage() {
                   disabled={placing || !selectedAddressId}
                   className="mt-4 w-full rounded-[7px] bg-brand-green py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {placing ? "Placing order..." : "Place Order"}
+                  {placing ? "Redirecting to payment..." : "Proceed to Payment"}
                 </button>
               </div>
             </div>

@@ -11,6 +11,7 @@ import { Footer } from "../../../../components/Footer";
 import { AccountNav } from "../../../../components/AccountNav";
 import { useAuth } from "../../../../lib/auth-context";
 import { cancelOrder, getOrder } from "../../../../lib/api";
+import { useRazorpayCheckout } from "../../../../lib/useRazorpayCheckout";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Order placed",
@@ -44,6 +45,9 @@ export default function OrderDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
+  const payForOrder = useRazorpayCheckout();
 
   useEffect(() => {
     if (!accessToken) return;
@@ -60,6 +64,19 @@ export default function OrderDetailPage() {
     };
   }, [accessToken, params.id]);
 
+  // The Razorpay checkout hook lands back on this same URL after an
+  // attempt settles, which Next.js treats as a no-op navigation (no
+  // re-render) since we're already here - so re-fetch the order
+  // ourselves to pick up whatever the server actually recorded.
+  async function refetchOrder() {
+    if (!accessToken) return;
+    try {
+      setOrder(await getOrder(accessToken, params.id));
+    } catch {
+      // Keep showing the last known order state if the re-fetch fails.
+    }
+  }
+
   async function handleCancel() {
     if (!accessToken || !order) return;
     setCancelError(null);
@@ -71,6 +88,25 @@ export default function OrderDetailPage() {
     } finally {
       setCancelling(false);
     }
+  }
+
+  async function handlePayNow() {
+    if (!accessToken || !order) return;
+    setPayError(null);
+    setPaying(true);
+    await payForOrder(
+      accessToken,
+      order,
+      user ?? {},
+      (message) => {
+        setPayError(message);
+        setPaying(false);
+      },
+      async () => {
+        await refetchOrder();
+        setPaying(false);
+      },
+    );
   }
 
   return (
@@ -115,10 +151,23 @@ export default function OrderDetailPage() {
 
                     {order.status === "PENDING" ? (
                       <div className="mt-3.5">
+                        {order.payment?.status !== "PAID" ? (
+                          <p className="mb-2 text-[12.5px] text-brand-sub">
+                            {order.payment?.status === "FAILED"
+                              ? "Your last payment attempt didn't go through."
+                              : "Awaiting payment."}
+                          </p>
+                        ) : null}
+                        {payError ? <p className="mb-2 text-[12.5px] text-brand-red">{payError}</p> : null}
                         {cancelError ? <p className="mb-2 text-[12.5px] text-brand-red">{cancelError}</p> : null}
-                        <Button variant="secondary" onClick={handleCancel} disabled={cancelling}>
-                          {cancelling ? "Cancelling..." : "Cancel order"}
-                        </Button>
+                        <div className="flex flex-wrap gap-2.5">
+                          <Button onClick={handlePayNow} disabled={paying || cancelling}>
+                            {paying ? "Redirecting to payment..." : "Pay Now"}
+                          </Button>
+                          <Button variant="secondary" onClick={handleCancel} disabled={cancelling || paying}>
+                            {cancelling ? "Cancelling..." : "Cancel order"}
+                          </Button>
+                        </div>
                       </div>
                     ) : null}
                     {order.status === "CANCELLED" && order.cancellationReason ? (

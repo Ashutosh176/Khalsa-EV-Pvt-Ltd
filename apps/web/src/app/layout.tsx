@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../components/Providers";
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {MSG91_WIDGET_ID && MSG91_WIDGET_TOKEN_AUTH ? (
           <Msg91WidgetLoader widgetId={MSG91_WIDGET_ID} tokenAuth={MSG91_WIDGET_TOKEN_AUTH} />
         ) : null}
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       </body>
     </html>
   );

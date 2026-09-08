@@ -82,7 +82,7 @@ export function Header() {
               📞 1800-121-0259
             </a>
             <a href="mailto:infor@khalsaev.com" className="hover:text-white">
-              ✉️ infor@khalsaev.com
+              ✉️ info@khalsaev.com
             </a>
           </div>
         </div>
@@ -90,7 +90,7 @@ export function Header() {
 
       <div className="mx-auto flex max-w-[1440px] items-center gap-[22px] border-b border-brand-line px-4 py-3.5 sm:px-7">
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-[48px] w-auto" priority />
+          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-[48px] w-[103.8px]" priority />
         </Link>
 
         <form onSubmit={handleSearch} className="hidden w-[560px] md:ml-auto md:flex">
@@ -168,7 +168,7 @@ export function Header() {
           <div className="hidden flex-1 items-center gap-2 lg:flex">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent to-brand-green/50" />
             <span className="whitespace-nowrap text-[8px] font-bold uppercase tracking-[0.16em] text-brand-green-dark/70">
-              Parts For Today
+              A Greener Tomorrow
             </span>
           </div>
 
@@ -208,7 +208,7 @@ export function Header() {
 
           <div className="hidden flex-1 items-center gap-2 lg:flex">
             <span className="whitespace-nowrap text-[8px] font-bold uppercase tracking-[0.16em] text-brand-green-dark/70">
-              A Greener Tomorrow
+              Parts For Today
             </span>
             <span className="h-px flex-1 bg-gradient-to-l from-transparent to-brand-green/50" />
           </div>

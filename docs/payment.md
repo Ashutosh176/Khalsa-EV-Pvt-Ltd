@@ -1,6 +1,6 @@
 # Checkout & payment
 
-## What's built (Phase 7)
+## What's built
 
 `POST /api/v1/orders` turns a customer's cart into an `Order`:
 
@@ -17,43 +17,80 @@
    atomically reserves stock per item via a raw conditional `UPDATE ...
    WHERE ("currentStock" - "reservedStock") >= quantity` - the availability
    check and the reservation happen as one indivisible SQL statement, so two
-   concurrent orders for the last unit can't both succeed. Verified against
-   the real database with genuinely concurrent requests (20 units requested
-   by each of two customers against 25 in stock): one order was created, the
-   other got a clean `409 Conflict`, final `reservedStock` was exactly 20.
+   concurrent orders for the last unit can't both succeed.
 5. Writes the first `OrderStatusHistory` row (`PENDING`).
 
 `POST /orders/:id/cancel` (customer-initiated, only while `PENDING`) reverses
 the reservation - releases `reservedStock` per item, logs a `RELEASE`
 `StockMovement`, sets `CANCELLED`.
 
-**The cart is deliberately left untouched by order creation.** There's no
-payment step yet, so nothing has actually been purchased - clearing the cart
-belongs at payment confirmation (see below), not at order creation.
+**The cart is left untouched by order creation.** Nothing is purchased yet at
+that point - it's only cleared once payment is actually verified (see below).
 
 No coupon system is wired up yet (`discountAmount` is always 0) - `Coupon`
 exists in the schema but application logic for it hasn't been built.
 
-## What's deferred: Razorpay
+## Razorpay integration
 
-Explicitly not built this phase, at the user's direction (no Razorpay test
-credentials available yet to verify against):
+`RazorpayClient` (`apps/api/src/payments/razorpay.client.ts`) talks to
+Razorpay's REST API directly via `fetch` + Basic Auth (same pattern as
+`Msg91Client`) - no SDK dependency. Three operations:
 
-- Creating a Razorpay order for the `Order.totalAmount` and returning the
-  checkout params to the frontend.
-- `POST /orders/:id/verify-payment` - signature verification
-  (`hmac_sha256(razorpay_order_id + "|" + razorpay_payment_id, key_secret)`)
-  before ever marking a `Payment`/`Order` as paid. Per Section 13, a
-  frontend-only "payment successful" message must never be trusted - there is
-  intentionally no code path anywhere that marks an order `CONFIRMED` without
-  this verification.
-- `POST /payments/webhook` - Razorpay webhook handling (separate signature
-  scheme from checkout verification, using `RAZORPAY_WEBHOOK_SECRET`), with
-  idempotent handling for duplicate webhook delivery.
-- Clearing the cart and transitioning `Order` to `CONFIRMED` once payment is
-  verified.
+- `createOrder(amountPaise, receipt)` - `POST /v1/orders` with
+  `payment_capture: 1` (auto-capture on success).
+- `verifyCheckoutSignature(orderId, paymentId, signature)` -
+  `hmac_sha256(order_id + "|" + payment_id, key_secret)`, timing-safe
+  compared. This is what stands between "the browser said payment
+  succeeded" and actually marking anything paid (Section 13) - there is no
+  code path that confirms an order without it.
+- `verifyWebhookSignature(rawBody, signature)` - a separate scheme keyed by
+  `RAZORPAY_WEBHOOK_SECRET`, computed over the raw request body
+  (`app.rawBody`, enabled in `main.ts`'s `NestFactory.create` options).
 
-The `Payment` model already exists in the schema and `Order.status` already
-supports the `PENDING -> CONFIRMED` transition, so none of this needs a schema
-change - it's purely the Razorpay-facing service/controller code, to be added
-once test credentials are available.
+**Checkout flow** (`PaymentsService`, `apps/api/src/payments/payments.service.ts`):
+
+1. `POST /orders/:id/pay` - creates (or, on retry, reuses) a Razorpay order
+   for `Order.totalAmount`, persisting a `Payment` row with its
+   `razorpayOrderId`. Returns `{ razorpayOrderId, amount, currency, keyId }`
+   for the frontend to open Razorpay Checkout with.
+2. The web checkout page (`apps/web/src/app/checkout/page.tsx`) and the
+   order detail page's "Pay Now" retry (`apps/web/src/app/account/orders/[id]/page.tsx`)
+   both drive this through the shared `useRazorpayCheckout` hook
+   (`apps/web/src/lib/useRazorpayCheckout.ts`), which opens Razorpay
+   Checkout (loaded globally in `layout.tsx` via `checkout.razorpay.com/v1/checkout.js`).
+3. On Checkout's success callback, the frontend calls
+   `POST /orders/:id/verify-payment` with the `razorpay_order_id`,
+   `razorpay_payment_id`, `razorpay_signature` triple. The server verifies
+   the signature, then confirms the order.
+4. `POST /payments/webhook` (public, signature-verified, no auth guard) is
+   Razorpay's independent server-to-server confirmation - handles
+   `payment.captured` and `payment.failed`, so a payment still gets
+   recorded even if the customer's browser never calls back (closed tab,
+   network drop, etc).
+
+Both paths 3 and 4 fall into the same `PaymentsService.markPaid`, which is
+idempotent against the checkout callback and the webhook racing each other
+(re-checks `Payment.status` inside the DB transaction). Confirming a
+payment: marks `Payment` `PAID`, transitions `Order` `PENDING -> CONFIRMED`,
+writes an `OrderStatusHistory` row, clears the customer's active cart items,
+and sends a `PAYMENT` notification.
+
+A failed/abandoned checkout attempt leaves the order `PENDING` with its
+`Payment` row still there (or marked `FAILED`) - the customer can retry from
+the order detail page's "Pay Now" button, which reuses the same Razorpay
+order rather than creating a new one.
+
+**Verified against the real Razorpay test API** (order creation + the full
+Checkout -> signature verification -> order confirmation -> cart-clear path,
+with a Razorpay test-mode card, including the OTP step) - see git history
+for the smoke test used, not kept in the repo.
+
+## Still not built
+
+- Refunds (`Refund` model + `RAZORPAY_REFUND_ID` exist in the schema;
+  `ALLOWED_ORDER_TRANSITIONS` deliberately has no path to `REFUNDED` yet -
+  wire this up alongside the Returns flow).
+- `RAZORPAY_WEBHOOK_SECRET` is not yet set - the webhook endpoint exists and
+  verifies signatures, but no webhook is registered with Razorpay against it
+  yet, so in practice only the checkout-callback path (`verify-payment`)
+  confirms payments today.

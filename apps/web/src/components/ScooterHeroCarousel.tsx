@@ -10,8 +10,8 @@ const SLIDES = [
   { src: "/hero-scooter-4.png", alt: "Khalsa EV electric scooter on a terrace at dusk with city skyline" },
 ];
 
-const AUTOPLAY_MS = 5500;
-const TRANSITION_MS = 800;
+const AUTOPLAY_MS = 2200;
+const TRANSITION_MS = 300;
 
 // Right-to-left autoplay carousel for the Electric Scooters hero background
 // (Section 60 follow-up). A clone of the first slide is appended after the

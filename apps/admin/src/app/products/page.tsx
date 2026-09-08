@@ -17,6 +17,12 @@ const STATUS_STYLES: Record<string, string> = {
   ARCHIVED: "bg-[#FDE8E7] text-[#D93429]",
 };
 
+const PRODUCT_TYPE_LABELS: Record<string, string> = {
+  SPARE_PART: "Spare Part",
+  SCOOTER: "Scooter",
+  ACCESSORY: "Accessory",
+};
+
 function ProductsContent() {
   const { accessToken } = useAuth();
   const [products, setProducts] = useState<AdminProduct[] | null>(null);
@@ -27,6 +33,7 @@ function ProductsContent() {
   const [categoryId, setCategoryId] = useState("");
   const [brandId, setBrandId] = useState("");
   const [status, setStatus] = useState("");
+  const [productType, setProductType] = useState("");
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -45,6 +52,7 @@ function ProductsContent() {
       categoryId: categoryId || undefined,
       brandId: brandId || undefined,
       status: status || undefined,
+      productType: productType || undefined,
       page,
       pageSize,
     })
@@ -59,7 +67,7 @@ function ProductsContent() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, search, categoryId, brandId, status, page]);
+  }, [accessToken, search, categoryId, brandId, status, productType, page]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -164,6 +172,19 @@ function ProductsContent() {
                 <option value="INACTIVE">Inactive</option>
                 <option value="ARCHIVED">Archived</option>
               </select>
+              <select
+                value={productType}
+                onChange={(e) => {
+                  setPage(1);
+                  setProductType(e.target.value);
+                }}
+                className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
+              >
+                <option value="">All Types</option>
+                <option value="SPARE_PART">Spare Part</option>
+                <option value="SCOOTER">Scooter</option>
+                <option value="ACCESSORY">Accessory</option>
+              </select>
             </div>
 
             <table className="dt w-full text-left text-[12.5px]">
@@ -172,6 +193,7 @@ function ProductsContent() {
                   <th className="px-4 py-2.5 font-semibold">Product</th>
                   <th className="px-4 py-2.5 font-semibold">SKU</th>
                   <th className="px-4 py-2.5 font-semibold">Category</th>
+                  <th className="px-4 py-2.5 font-semibold">Type</th>
                   <th className="px-4 py-2.5 font-semibold">Price</th>
                   <th className="px-4 py-2.5 font-semibold">Stock</th>
                   <th className="px-4 py-2.5 font-semibold">Status</th>
@@ -180,13 +202,13 @@ function ProductsContent() {
               <tbody>
                 {products === null ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-brand-sub">
+                    <td colSpan={7} className="px-4 py-6 text-center text-brand-sub">
                       Loading...
                     </td>
                   </tr>
                 ) : products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-brand-sub">
+                    <td colSpan={7} className="px-4 py-6 text-center text-brand-sub">
                       No products found.
                     </td>
                   </tr>
@@ -210,6 +232,9 @@ function ProductsContent() {
                         </td>
                         <td className="px-4 py-2.5 text-brand-sub">{product.sku}</td>
                         <td className="px-4 py-2.5">{product.category.name}</td>
+                        <td className="px-4 py-2.5 text-brand-sub">
+                          {PRODUCT_TYPE_LABELS[product.productType] ?? product.productType}
+                        </td>
                         <td className="px-4 py-2.5">{formatIndianRupees(product.price)}</td>
                         <td className="px-4 py-2.5">{stock}</td>
                         <td className="px-4 py-2.5">

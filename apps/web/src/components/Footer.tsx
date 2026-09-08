@@ -95,7 +95,7 @@ export function Footer() {
           <div>
             <h5 className="mb-2.5 text-[12.5px] font-bold text-white">Contact Us</h5>
             <p className="py-1 text-[11.3px] leading-[2]">📞 1800-121-0259</p>
-            <p className="py-1 text-[11.3px] leading-[2]">✉️ infor@khalsaev.com</p>
+            <p className="py-1 text-[11.3px] leading-[2]">✉️ info@khalsaev.com</p>
             <p className="py-1 text-[11.3px] leading-[1.7]">
               📍 Plot no. 130/1 and 130/2, Pachenda Road, Village Mustafabad, Muzaffarnagar, UP - 251001
             </p>

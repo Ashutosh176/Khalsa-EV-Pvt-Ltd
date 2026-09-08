@@ -16,6 +16,7 @@ import { InventoryModule } from "./inventory/inventory.module";
 import { ReturnsModule } from "./returns/returns.module";
 import { ShippingModule } from "./shipping/shipping.module";
 import { NotificationsModule } from "./notifications/notifications.module";
+import { PaymentsModule } from "./payments/payments.module";
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
     ReturnsModule,
     ShippingModule,
     NotificationsModule,
+    PaymentsModule,
   ],
   controllers: [HealthController],
 })

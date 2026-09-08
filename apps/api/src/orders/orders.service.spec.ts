@@ -6,6 +6,7 @@ import { OrdersService } from "./orders.service";
 import { PrismaService } from "../prisma/prisma.service";
 import type { ShippingService } from "../shipping/shipping.service";
 import type { NotificationsService } from "../notifications/notifications.service";
+import type { PaymentsService } from "../payments/payments.service";
 import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
 
 type Row = { id: string; [key: string]: unknown };
@@ -47,6 +48,7 @@ describe("OrdersService", () => {
   let executeRawResult: number;
   let shippingService: { syncStatus: AsyncMock<void> };
   let notificationsService: { create: AsyncMock<Row> };
+  let paymentsService: Record<string, never>;
 
   beforeEach(() => {
     executeRawResult = 1; // reservation succeeds by default
@@ -84,11 +86,13 @@ describe("OrdersService", () => {
 
     shippingService = { syncStatus: jest.fn<AsyncFn<void>>().mockResolvedValue(undefined) };
     notificationsService = { create: jest.fn<AsyncFn<Row>>().mockResolvedValue({ id: "notif-1" }) };
+    paymentsService = {};
 
     service = new OrdersService(
       prisma as unknown as PrismaService,
       shippingService as unknown as ShippingService,
       notificationsService as unknown as NotificationsService,
+      paymentsService as unknown as PaymentsService,
     );
   });
 

@@ -6,6 +6,7 @@ import { generateOrderNumber } from "../common/order-number";
 import { ShippingService } from "../shipping/shipping.service";
 import type { UpdateShipmentDto } from "../shipping/dto/update-shipment.dto";
 import { NotificationsService } from "../notifications/notifications.service";
+import { PaymentsService } from "../payments/payments.service";
 import {
   ALLOWED_ORDER_TRANSITIONS,
   notificationTypeForOrderStatus,
@@ -15,6 +16,7 @@ import {
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { ListOrdersQuery } from "./dto/list-orders.query";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
+import { VerifyPaymentDto } from "./dto/verify-payment.dto";
 
 const ORDER_INCLUDE = {
   items: true,
@@ -44,6 +46,7 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly shippingService: ShippingService,
     private readonly notificationsService: NotificationsService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async createFromCart(userId: string, dto: CreateOrderDto) {
@@ -159,10 +162,25 @@ export class OrdersService {
       return order.id;
     });
 
-    // Cart is intentionally left untouched here: there is no payment
-    // integration yet (Razorpay wiring is deferred), so this order isn't
-    // actually paid for. Clearing the cart belongs at payment confirmation,
-    // not at order creation - see docs/payment.md for the current state.
+    // Cart is intentionally left untouched here: this order isn't paid
+    // for yet. Clearing the cart happens once payment is verified, in
+    // PaymentsService.markPaid - see docs/payment.md.
+    return this.findOne(userId, orderId);
+  }
+
+  // Creates (or reuses, on retry) the Razorpay order backing this order's
+  // payment, for the frontend to open Razorpay Checkout with.
+  async initiatePayment(userId: string, orderId: string) {
+    const order = await this.findOne(userId, orderId);
+    return this.paymentsService.createRazorpayOrderForOrder(order);
+  }
+
+  // Verifies the signature from Razorpay Checkout's success handler and,
+  // if valid, confirms the order (Section 13 - never trust the frontend's
+  // word alone that payment succeeded).
+  async verifyPayment(userId: string, orderId: string, dto: VerifyPaymentDto) {
+    const order = await this.findOne(userId, orderId);
+    await this.paymentsService.confirmCheckoutPayment(order, dto);
     return this.findOne(userId, orderId);
   }
 

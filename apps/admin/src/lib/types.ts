@@ -24,6 +24,33 @@ export type InventoryRow = {
   lowStockThreshold: number;
 };
 
+export type BatteryType = "LI_ION" | "LFP";
+
+// 1:1 with ScooterSpecification (apps/api/prisma/schema.prisma) - required
+// fields here match that model's non-nullable columns.
+export type ScooterSpecification = {
+  brand?: string;
+  model: string;
+  variant?: string;
+  batteryCapacityAh?: number;
+  batteryCapacityWh?: number;
+  batteryType: BatteryType;
+  motorPowerW: number;
+  topSpeedKmh: number;
+  rangeKm: number;
+  chargingTimeHours: number;
+  brakingType?: string;
+  tyreType?: string;
+  tyreSize?: string;
+  suspension?: string;
+  kerbWeightKg?: number;
+  loadCapacityKg?: number;
+  seatHeightMm?: number;
+  groundClearanceMm?: number;
+  warrantyTerms?: string;
+  highlightFeatures?: string[];
+};
+
 export type AdminProduct = {
   id: string;
   slug: string;
@@ -44,6 +71,7 @@ export type AdminProduct = {
   brand: Brand | null;
   images: ProductImage[];
   inventory: InventoryRow[];
+  scooterSpec: ScooterSpecification | null;
 };
 
 export type CreateProductInput = {
@@ -53,6 +81,7 @@ export type CreateProductInput = {
   brandId?: string;
   partNumber?: string;
   description?: string;
+  productType?: ProductType;
   price: number;
   mrp: number;
   gstPercent?: number;
@@ -60,6 +89,7 @@ export type CreateProductInput = {
   status?: ProductStatus;
   isFeatured?: boolean;
   initialStock?: number;
+  scooterSpec?: ScooterSpecification;
 };
 
 export type UpdateProductInput = Partial<Omit<CreateProductInput, "initialStock">>;

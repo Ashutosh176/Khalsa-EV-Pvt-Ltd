@@ -3,17 +3,11 @@ import { CatalogProductCard } from "@khalsa-ev/ui";
 import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
 import { ProductCardActions } from "../../../components/ProductCardActions";
-import { getBrands, getCatalogProducts, type CatalogFilters } from "../../../lib/api";
+import { getBrands, getCatalogProducts } from "../../../lib/api";
 
 export const metadata = {
   title: "Electric Scooters | Khalsa EV",
   description: "Browse Khalsa EV's electric scooter lineup - compare battery, motor, range and price.",
-};
-
-const SORT_LABELS: Record<NonNullable<CatalogFilters["sort"]>, string> = {
-  newest: "Newest",
-  price_asc: "Price: low to high",
-  price_desc: "Price: high to low",
 };
 
 function toStringParam(value: string | string[] | undefined): string | undefined {
@@ -31,8 +25,6 @@ export default async function ElectricScootersListingPage({
   const priceMin = toStringParam(params.priceMin);
   const priceMax = toStringParam(params.priceMax);
   const featured = toStringParam(params.featured) === "true";
-  const sortParam = toStringParam(params.sort);
-  const sort = sortParam === "price_asc" || sortParam === "price_desc" ? sortParam : "newest";
   const page = Number(toStringParam(params.page) ?? "1") || 1;
 
   const [brands, catalog] = await Promise.all([
@@ -44,7 +36,7 @@ export default async function ElectricScootersListingPage({
       priceMin: priceMin ? Number(priceMin) : undefined,
       priceMax: priceMax ? Number(priceMax) : undefined,
       featured: featured || undefined,
-      sort,
+      sort: "newest",
       page,
       pageSize: 12,
     }),
@@ -112,13 +104,6 @@ export default async function ElectricScootersListingPage({
               </div>
             </div>
 
-            <select name="sort" defaultValue={sort} className="mb-3 w-full rounded-[6px] border border-brand-line px-2 py-1.5 text-[11.5px]">
-              {Object.entries(SORT_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  Sort: {label}
-                </option>
-              ))}
-            </select>
             {featured ? <input type="hidden" name="featured" value="true" /> : null}
             {search ? <input type="hidden" name="search" value={search} /> : null}
 
@@ -137,7 +122,7 @@ export default async function ElectricScootersListingPage({
               </p>
             </div>
             <div className="text-xs text-brand-sub">
-              {catalog.total} {catalog.total === 1 ? "result" : "results"} · Sort by: <b className="text-brand-ink">{SORT_LABELS[sort]}</b>
+              {catalog.total} {catalog.total === 1 ? "result" : "results"}
             </div>
           </div>
 
@@ -178,7 +163,6 @@ export default async function ElectricScootersListingPage({
                 if (priceMin) query.set("priceMin", priceMin);
                 if (priceMax) query.set("priceMax", priceMax);
                 if (featured) query.set("featured", "true");
-                if (sort !== "newest") query.set("sort", sort);
                 query.set("page", String(pageNumber));
 
                 return (

@@ -10,7 +10,9 @@ import { getUploadsDir } from "./common/uploads";
 async function bootstrap() {
   config({ path: path.resolve(__dirname, "../../../.env") });
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // rawBody: true - the Razorpay webhook needs the exact raw request body
+  // to verify its signature (PaymentsController), not the parsed JSON.
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
   app.setGlobalPrefix("api/v1");
   // Local disk storage for product images until STORAGE_* (S3-compatible)
   // credentials are configured for a real phase - see .env's comment on

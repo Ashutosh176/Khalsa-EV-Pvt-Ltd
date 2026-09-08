@@ -271,6 +271,25 @@ export function cancelOrder(accessToken: string, id: string, reason?: string) {
   });
 }
 
+// --- Payments ---
+
+export type InitiatePaymentResult = { razorpayOrderId: string; amount: number; currency: string; keyId: string };
+
+export function initiatePayment(accessToken: string, orderId: string) {
+  return authFetch<InitiatePaymentResult>(`/orders/${orderId}/pay`, accessToken, { method: "POST" });
+}
+
+export function verifyPayment(
+  accessToken: string,
+  orderId: string,
+  dto: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string },
+) {
+  return authFetch<OrderView>(`/orders/${orderId}/verify-payment`, accessToken, {
+    method: "POST",
+    body: JSON.stringify(dto),
+  });
+}
+
 // --- Returns ---
 
 export function getReturns(accessToken: string) {

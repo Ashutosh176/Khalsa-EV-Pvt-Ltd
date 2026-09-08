@@ -3,17 +3,11 @@ import { CatalogProductCard } from "@khalsa-ev/ui";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { ProductCardActions } from "../../components/ProductCardActions";
-import { getBrands, getCatalogProducts, getCategories, type CatalogFilters } from "../../lib/api";
+import { getBrands, getCatalogProducts, getCategories } from "../../lib/api";
 
 export const metadata = {
   title: "Shop EV Spare Parts | Khalsa EV",
   description: "Browse genuine electric vehicle spare parts and accessories, with vehicle compatibility guidance.",
-};
-
-const SORT_LABELS: Record<NonNullable<CatalogFilters["sort"]>, string> = {
-  newest: "Newest",
-  price_asc: "Price: low to high",
-  price_desc: "Price: high to low",
 };
 
 function toStringParam(value: string | string[] | undefined): string | undefined {
@@ -31,8 +25,6 @@ export default async function ProductsPage({
   const brandId = toStringParam(params.brandId);
   const priceMin = toStringParam(params.priceMin);
   const priceMax = toStringParam(params.priceMax);
-  const sortParam = toStringParam(params.sort);
-  const sort = sortParam === "price_asc" || sortParam === "price_desc" ? sortParam : "newest";
   const page = Number(toStringParam(params.page) ?? "1") || 1;
 
   const [categories, brands, catalog] = await Promise.all([
@@ -45,7 +37,7 @@ export default async function ProductsPage({
       brandId,
       priceMin: priceMin ? Number(priceMin) : undefined,
       priceMax: priceMax ? Number(priceMax) : undefined,
-      sort,
+      sort: "newest",
       page,
       pageSize: 12,
     }),
@@ -137,13 +129,6 @@ export default async function ProductsPage({
               </div>
             </div>
 
-            <select name="sort" defaultValue={sort} className="mb-3 w-full rounded-[6px] border border-brand-line px-2 py-1.5 text-[11.5px]">
-              {Object.entries(SORT_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  Sort: {label}
-                </option>
-              ))}
-            </select>
             {search ? <input type="hidden" name="search" value={search} /> : null}
 
             <button type="submit" className="w-full rounded-[7px] bg-brand-green py-2.5 text-[13px] font-semibold text-white hover:bg-brand-green-dark">
@@ -161,7 +146,7 @@ export default async function ProductsPage({
               </p>
             </div>
             <div className="text-xs text-brand-sub">
-              {catalog.total} {catalog.total === 1 ? "result" : "results"} · Sort by: <b className="text-brand-ink">{SORT_LABELS[sort]}</b>
+              {catalog.total} {catalog.total === 1 ? "result" : "results"}
             </div>
           </div>
 
@@ -196,7 +181,6 @@ export default async function ProductsPage({
                 if (brandId) query.set("brandId", brandId);
                 if (priceMin) query.set("priceMin", priceMin);
                 if (priceMax) query.set("priceMax", priceMax);
-                if (sort !== "newest") query.set("sort", sort);
                 query.set("page", String(pageNumber));
 
                 return (

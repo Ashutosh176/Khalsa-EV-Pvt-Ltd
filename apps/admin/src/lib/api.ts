@@ -83,6 +83,7 @@ export type ProductFilters = {
   categoryId?: string;
   brandId?: string;
   status?: string;
+  productType?: string;
   page?: number;
   pageSize?: number;
 };

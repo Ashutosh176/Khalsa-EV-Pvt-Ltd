@@ -12,7 +12,7 @@ import {
   updateProduct,
   uploadProductImages,
 } from "../../lib/api";
-import type { AdminProduct, Brand, Category, ProductStatus } from "../../lib/types";
+import type { AdminProduct, BatteryType, Brand, Category, ProductStatus, ProductType, ScooterSpecification } from "../../lib/types";
 
 type Props = {
   mode: "create" | "edit";
@@ -21,6 +21,109 @@ type Props = {
 
 function paiseToRupeeString(paise: number): string {
   return (paise / 100).toString();
+}
+
+// Scooter Specification form state - string-typed so number inputs can hold
+// an in-progress/empty value; parsed into ScooterSpecification on submit.
+type ScooterSpecForm = {
+  brand: string;
+  model: string;
+  variant: string;
+  batteryCapacityAh: string;
+  batteryCapacityWh: string;
+  batteryType: BatteryType;
+  motorPowerW: string;
+  topSpeedKmh: string;
+  rangeKm: string;
+  chargingTimeHours: string;
+  brakingType: string;
+  tyreType: string;
+  tyreSize: string;
+  suspension: string;
+  kerbWeightKg: string;
+  loadCapacityKg: string;
+  seatHeightMm: string;
+  groundClearanceMm: string;
+  warrantyTerms: string;
+  highlightFeatures: string; // comma-separated
+};
+
+function emptyScooterSpecForm(): ScooterSpecForm {
+  return {
+    brand: "",
+    model: "",
+    variant: "",
+    batteryCapacityAh: "",
+    batteryCapacityWh: "",
+    batteryType: "LI_ION",
+    motorPowerW: "",
+    topSpeedKmh: "",
+    rangeKm: "",
+    chargingTimeHours: "",
+    brakingType: "",
+    tyreType: "",
+    tyreSize: "",
+    suspension: "",
+    kerbWeightKg: "",
+    loadCapacityKg: "",
+    seatHeightMm: "",
+    groundClearanceMm: "",
+    warrantyTerms: "",
+    highlightFeatures: "",
+  };
+}
+
+function scooterSpecToForm(spec: ScooterSpecification): ScooterSpecForm {
+  return {
+    brand: spec.brand ?? "",
+    model: spec.model,
+    variant: spec.variant ?? "",
+    batteryCapacityAh: spec.batteryCapacityAh != null ? String(spec.batteryCapacityAh) : "",
+    batteryCapacityWh: spec.batteryCapacityWh != null ? String(spec.batteryCapacityWh) : "",
+    batteryType: spec.batteryType,
+    motorPowerW: String(spec.motorPowerW),
+    topSpeedKmh: String(spec.topSpeedKmh),
+    rangeKm: String(spec.rangeKm),
+    chargingTimeHours: String(spec.chargingTimeHours),
+    brakingType: spec.brakingType ?? "",
+    tyreType: spec.tyreType ?? "",
+    tyreSize: spec.tyreSize ?? "",
+    suspension: spec.suspension ?? "",
+    kerbWeightKg: spec.kerbWeightKg != null ? String(spec.kerbWeightKg) : "",
+    loadCapacityKg: spec.loadCapacityKg != null ? String(spec.loadCapacityKg) : "",
+    seatHeightMm: spec.seatHeightMm != null ? String(spec.seatHeightMm) : "",
+    groundClearanceMm: spec.groundClearanceMm != null ? String(spec.groundClearanceMm) : "",
+    warrantyTerms: spec.warrantyTerms ?? "",
+    highlightFeatures: (spec.highlightFeatures ?? []).join(", "),
+  };
+}
+
+function formToScooterSpec(form: ScooterSpecForm): ScooterSpecification {
+  return {
+    brand: form.brand || undefined,
+    model: form.model,
+    variant: form.variant || undefined,
+    batteryCapacityAh: form.batteryCapacityAh ? Number(form.batteryCapacityAh) : undefined,
+    batteryCapacityWh: form.batteryCapacityWh ? Number(form.batteryCapacityWh) : undefined,
+    batteryType: form.batteryType,
+    motorPowerW: Math.round(Number(form.motorPowerW)),
+    topSpeedKmh: Math.round(Number(form.topSpeedKmh)),
+    rangeKm: Math.round(Number(form.rangeKm)),
+    chargingTimeHours: Number(form.chargingTimeHours),
+    brakingType: form.brakingType || undefined,
+    tyreType: form.tyreType || undefined,
+    tyreSize: form.tyreSize || undefined,
+    suspension: form.suspension || undefined,
+    kerbWeightKg: form.kerbWeightKg ? Number(form.kerbWeightKg) : undefined,
+    loadCapacityKg: form.loadCapacityKg ? Number(form.loadCapacityKg) : undefined,
+    seatHeightMm: form.seatHeightMm ? Math.round(Number(form.seatHeightMm)) : undefined,
+    groundClearanceMm: form.groundClearanceMm ? Math.round(Number(form.groundClearanceMm)) : undefined,
+    warrantyTerms: form.warrantyTerms || undefined,
+    highlightFeatures: form.highlightFeatures
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  };
 }
 
 export function ProductForm({ mode, product }: Props) {
@@ -32,6 +135,10 @@ export function ProductForm({ mode, product }: Props) {
 
   const [sku, setSku] = useState(product?.sku ?? "");
   const [name, setName] = useState(product?.name ?? "");
+  const [productType, setProductType] = useState<ProductType>(product?.productType ?? "SPARE_PART");
+  const [scooterSpec, setScooterSpec] = useState<ScooterSpecForm>(
+    product?.scooterSpec ? scooterSpecToForm(product.scooterSpec) : emptyScooterSpecForm(),
+  );
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
   const [brandId, setBrandId] = useState(product?.brandId ?? "");
   const [partNumber, setPartNumber] = useState(product?.partNumber ?? "");
@@ -118,11 +225,13 @@ export function ProductForm({ mode, product }: Props) {
     try {
       const priceInPaise = Math.round(Number(priceRupees) * 100);
       const mrpInPaise = Math.round(Number(mrpRupees) * 100);
+      const scooterSpecPayload = productType === "SCOOTER" ? formToScooterSpec(scooterSpec) : undefined;
 
       if (mode === "create") {
         const created = await createProduct(accessToken, {
           sku,
           name,
+          productType,
           categoryId,
           brandId: brandId || undefined,
           partNumber: partNumber || undefined,
@@ -134,6 +243,7 @@ export function ProductForm({ mode, product }: Props) {
           status,
           isFeatured,
           initialStock: initialStock ? Number(initialStock) : undefined,
+          scooterSpec: scooterSpecPayload,
         });
         // Best-effort: the product itself is already saved at this point,
         // so a failed image upload shouldn't block navigation - the edit
@@ -146,6 +256,7 @@ export function ProductForm({ mode, product }: Props) {
         await updateProduct(accessToken, product.id, {
           sku,
           name,
+          productType,
           categoryId,
           brandId: brandId || undefined,
           partNumber: partNumber || undefined,
@@ -156,6 +267,7 @@ export function ProductForm({ mode, product }: Props) {
           warrantyMonths: warrantyMonths ? Number(warrantyMonths) : undefined,
           status,
           isFeatured,
+          scooterSpec: scooterSpecPayload,
         });
         router.refresh();
       }
@@ -193,6 +305,19 @@ export function ProductForm({ mode, product }: Props) {
             onChange={(e) => setSku(e.target.value)}
             className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green"
           />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Product type</span>
+          <select
+            value={productType}
+            onChange={(e) => setProductType(e.target.value as ProductType)}
+            className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
+          >
+            <option value="SPARE_PART">Spare Part</option>
+            <option value="SCOOTER">Electric Scooter</option>
+            <option value="ACCESSORY">Accessory</option>
+          </select>
         </label>
 
         <label className="block">
@@ -315,6 +440,8 @@ export function ProductForm({ mode, product }: Props) {
         ) : null}
       </div>
 
+      {productType === "SCOOTER" ? <ScooterSpecFields value={scooterSpec} onChange={setScooterSpec} /> : null}
+
       <label className="block">
         <span className="text-sm font-medium text-slate-700">Description (optional)</span>
         <textarea
@@ -385,6 +512,113 @@ export function ProductForm({ mode, product }: Props) {
         {submitting ? "Saving..." : mode === "create" ? "Create product" : "Save changes"}
       </Button>
     </form>
+  );
+}
+
+const specInputClass =
+  "mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none focus:border-brand-green";
+
+function ScooterSpecFields({ value, onChange }: { value: ScooterSpecForm; onChange: (next: ScooterSpecForm) => void }) {
+  function set<K extends keyof ScooterSpecForm>(key: K, fieldValue: ScooterSpecForm[K]) {
+    onChange({ ...value, [key]: fieldValue });
+  }
+
+  return (
+    <fieldset className="rounded-2xl border border-slate-200 p-4">
+      <legend className="px-1 text-sm font-semibold text-slate-700">Scooter specifications</legend>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Model</span>
+          <input required value={value.model} onChange={(e) => set("model", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Variant (optional)</span>
+          <input value={value.variant} onChange={(e) => set("variant", e.target.value)} className={specInputClass} />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Battery type</span>
+          <select value={value.batteryType} onChange={(e) => set("batteryType", e.target.value as BatteryType)} className={specInputClass}>
+            <option value="LI_ION">Li-ion</option>
+            <option value="LFP">LFP</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Battery capacity (Ah, optional)</span>
+          <input type="number" min="0" step="0.1" value={value.batteryCapacityAh} onChange={(e) => set("batteryCapacityAh", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Battery capacity (Wh, optional)</span>
+          <input type="number" min="0" step="0.1" value={value.batteryCapacityWh} onChange={(e) => set("batteryCapacityWh", e.target.value)} className={specInputClass} />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Motor power (W)</span>
+          <input required type="number" min="0" value={value.motorPowerW} onChange={(e) => set("motorPowerW", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Top speed (km/h)</span>
+          <input required type="number" min="0" value={value.topSpeedKmh} onChange={(e) => set("topSpeedKmh", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Range (km)</span>
+          <input required type="number" min="0" value={value.rangeKm} onChange={(e) => set("rangeKm", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Charging time (hours)</span>
+          <input required type="number" min="0" step="0.1" value={value.chargingTimeHours} onChange={(e) => set("chargingTimeHours", e.target.value)} className={specInputClass} />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Braking type (optional)</span>
+          <input value={value.brakingType} onChange={(e) => set("brakingType", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Tyre type (optional)</span>
+          <input value={value.tyreType} onChange={(e) => set("tyreType", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Tyre size (optional)</span>
+          <input value={value.tyreSize} onChange={(e) => set("tyreSize", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Suspension (optional)</span>
+          <input value={value.suspension} onChange={(e) => set("suspension", e.target.value)} className={specInputClass} />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Kerb weight (kg, optional)</span>
+          <input type="number" min="0" step="0.1" value={value.kerbWeightKg} onChange={(e) => set("kerbWeightKg", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Load capacity (kg, optional)</span>
+          <input type="number" min="0" step="0.1" value={value.loadCapacityKg} onChange={(e) => set("loadCapacityKg", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Seat height (mm, optional)</span>
+          <input type="number" min="0" value={value.seatHeightMm} onChange={(e) => set("seatHeightMm", e.target.value)} className={specInputClass} />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700">Ground clearance (mm, optional)</span>
+          <input type="number" min="0" value={value.groundClearanceMm} onChange={(e) => set("groundClearanceMm", e.target.value)} className={specInputClass} />
+        </label>
+      </div>
+
+      <label className="mt-4 block">
+        <span className="text-sm font-medium text-slate-700">Warranty terms (optional)</span>
+        <input value={value.warrantyTerms} onChange={(e) => set("warrantyTerms", e.target.value)} className={specInputClass} />
+      </label>
+
+      <label className="mt-4 block">
+        <span className="text-sm font-medium text-slate-700">Highlight features (comma-separated, optional)</span>
+        <input
+          value={value.highlightFeatures}
+          onChange={(e) => set("highlightFeatures", e.target.value)}
+          placeholder="Digital Display, Reverse Mode, USB Charging Port"
+          className={specInputClass}
+        />
+      </label>
+    </fieldset>
   );
 }
 

@@ -16,6 +16,7 @@ const PRODUCT_INCLUDE = {
   brand: true,
   images: { orderBy: { sortOrder: Prisma.SortOrder.asc } },
   inventory: true,
+  scooterSpec: true,
 } satisfies Prisma.ProductInclude;
 
 @Injectable()
@@ -25,6 +26,14 @@ export class ProductsService {
   async create(dto: CreateProductDto) {
     if (dto.price > dto.mrp) {
       throw new BadRequestException("price cannot be greater than mrp");
+    }
+
+    const productType = dto.productType ?? ProductType.SPARE_PART;
+    if (productType === ProductType.SCOOTER && !dto.scooterSpec) {
+      throw new BadRequestException("scooterSpec is required when productType is SCOOTER");
+    }
+    if (productType !== ProductType.SCOOTER && dto.scooterSpec) {
+      throw new BadRequestException("scooterSpec is only allowed when productType is SCOOTER");
     }
 
     const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
@@ -50,7 +59,7 @@ export class ProductsService {
             partNumber: dto.partNumber,
             name: dto.name,
             description: dto.description,
-            productType: dto.productType ?? ProductType.SPARE_PART,
+            productType,
             status: dto.status ?? ProductStatus.DRAFT,
             categoryId: dto.categoryId,
             brandId: dto.brandId,
@@ -62,6 +71,9 @@ export class ProductsService {
             seoTitle: dto.seoTitle,
             seoDescription: dto.seoDescription,
             isFeatured: dto.isFeatured ?? false,
+            scooterSpec: dto.scooterSpec
+              ? { create: dto.scooterSpec as unknown as Prisma.ScooterSpecificationCreateWithoutProductInput }
+              : undefined,
           },
         });
 
@@ -153,15 +165,22 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
-    await this.findOne(id);
+    const current = await this.findOne(id);
 
     if (dto.price !== undefined || dto.mrp !== undefined) {
-      const current = await this.prisma.product.findUniqueOrThrow({ where: { id } });
       const nextPrice = dto.price ?? current.price;
       const nextMrp = dto.mrp ?? current.mrp;
       if (nextPrice > nextMrp) {
         throw new BadRequestException("price cannot be greater than mrp");
       }
+    }
+
+    const nextProductType = dto.productType ?? current.productType;
+    if (nextProductType === ProductType.SCOOTER && !dto.scooterSpec && !current.scooterSpec) {
+      throw new BadRequestException("scooterSpec is required when productType is SCOOTER");
+    }
+    if (nextProductType !== ProductType.SCOOTER && dto.scooterSpec) {
+      throw new BadRequestException("scooterSpec is only allowed when productType is SCOOTER");
     }
 
     try {
@@ -185,6 +204,14 @@ export class ProductsService {
           seoTitle: dto.seoTitle,
           seoDescription: dto.seoDescription,
           isFeatured: dto.isFeatured,
+          scooterSpec: dto.scooterSpec
+            ? {
+                upsert: {
+                  create: dto.scooterSpec as unknown as Prisma.ScooterSpecificationCreateWithoutProductInput,
+                  update: dto.scooterSpec as unknown as Prisma.ScooterSpecificationUpdateWithoutProductInput,
+                },
+              }
+            : undefined,
         },
         include: PRODUCT_INCLUDE,
       });

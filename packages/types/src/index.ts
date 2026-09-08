@@ -252,6 +252,15 @@ export type ShipmentView = {
   deliveredAt: string | null;
 };
 
+export type PaymentStatusValue = "PENDING" | "PAID" | "FAILED" | "REFUNDED" | "CANCELLED";
+
+export type PaymentView = {
+  status: PaymentStatusValue;
+  amount: number;
+  currency: string;
+  paidAt: string | null;
+};
+
 export type OrderView = {
   id: string;
   orderNumber: string;
@@ -268,6 +277,7 @@ export type OrderView = {
   statusHistory: OrderStatusHistoryEntry[];
   shippingAddress: Address;
   billingAddress: Address | null;
+  payment: PaymentView | null;
   shipment: ShipmentView | null;
 };
 

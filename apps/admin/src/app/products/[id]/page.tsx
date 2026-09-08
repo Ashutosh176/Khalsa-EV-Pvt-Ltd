@@ -79,9 +79,11 @@ function ProductEditContent({ id }: { id: string }) {
         <ProductForm mode="edit" product={product} />
       </div>
 
-      <div className="mt-6">
-        <CompatibilityManager productId={product.id} />
-      </div>
+      {product.productType !== "SCOOTER" ? (
+        <div className="mt-6">
+          <CompatibilityManager productId={product.id} />
+        </div>
+      ) : null}
     </div>
   );
 }
