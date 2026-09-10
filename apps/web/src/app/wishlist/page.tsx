@@ -65,14 +65,14 @@ export default function WishlistPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view and manage your wishlist.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -91,7 +91,7 @@ export default function WishlistPage() {
                     type="button"
                     onClick={handleMoveAllToCart}
                     disabled={movingAll}
-                    className="rounded-[7px] bg-brand-green px-[18px] py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-green-dark disabled:opacity-50"
+                    className="rounded-[7px] bg-brand-blue px-[18px] py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-blue-dark disabled:opacity-50"
                   >
                     {movingAll ? "Moving..." : "🛒 Move All to Cart"}
                   </button>
@@ -103,7 +103,7 @@ export default function WishlistPage() {
               ) : items.length === 0 ? (
                 <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
                   <p className="text-brand-sub">Your wishlist is empty.</p>
-                  <Link href="/products" className="mt-4 inline-block font-semibold text-brand-green-dark">
+                  <Link href="/products" className="mt-4 inline-block font-semibold text-brand-blue-dark">
                     Browse products
                   </Link>
                 </div>
@@ -125,13 +125,13 @@ export default function WishlistPage() {
                           )}
                         </div>
                         <div className="min-w-[200px] flex-1">
-                          <Link href={`/products/${item.product.slug}`} className="text-[13.5px] font-bold hover:text-brand-green-dark">
+                          <Link href={`/products/${item.product.slug}`} className="text-[13.5px] font-bold hover:text-brand-blue-dark">
                             {item.product.name}
                           </Link>
                           <div className="my-1">
                             <span
                               className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                item.product.inStock ? "bg-brand-green-light text-brand-green-dark" : "bg-red-50 text-brand-red"
+                                item.product.inStock ? "bg-brand-blue-light text-brand-blue-dark" : "bg-red-50 text-brand-red"
                               }`}
                             >
                               {item.product.inStock ? "In Stock" : "Out of stock"}
@@ -157,13 +157,13 @@ export default function WishlistPage() {
                             type="button"
                             onClick={() => handleMoveToCart(item.id)}
                             disabled={!item.product.inStock}
-                            className="rounded-[7px] border border-brand-green px-[18px] py-2 text-[13px] font-semibold text-brand-green-dark disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-[7px] border border-brand-blue px-[18px] py-2 text-[13px] font-semibold text-brand-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             🛒 Move to Cart
                           </button>
                           <Link
                             href={`/products/${item.product.slug}`}
-                            className="rounded-[7px] border border-brand-green px-[18px] py-2 text-center text-[13px] font-semibold text-brand-green-dark"
+                            className="rounded-[7px] border border-brand-blue px-[18px] py-2 text-center text-[13px] font-semibold text-brand-blue-dark"
                           >
                             View Details
                           </Link>

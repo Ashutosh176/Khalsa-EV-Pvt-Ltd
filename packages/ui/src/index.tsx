@@ -17,8 +17,9 @@ export function Button({
   ...props
 }: ButtonProps) {
   const styleByVariant: Record<ButtonVariant, string> = {
-    primary: "bg-brand-green text-white hover:bg-brand-green-dark",
-    secondary: "bg-white text-brand-green-dark ring-1 ring-brand-green hover:bg-brand-green-light",
+    primary: "bg-[var(--accent,var(--color-brand-green))] text-white hover:bg-[var(--accent-dark,var(--color-brand-green-dark))]",
+    secondary:
+      "bg-white text-[var(--accent-dark,var(--color-brand-green-dark))] ring-1 ring-[var(--accent,var(--color-brand-green))] hover:bg-[var(--accent-light,var(--color-brand-green-light))]",
     dark: "bg-brand-ink text-white hover:bg-black",
     ghost: "bg-transparent text-brand-ink hover:bg-slate-100",
   };
@@ -49,7 +50,7 @@ export function SectionHeading({
 
   return (
     <div className={`${alignment} max-w-2xl`}>
-      <p className="text-xs font-bold uppercase tracking-[0.24em] text-brand-green">{eyebrow}</p>
+      <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--accent,var(--color-brand-green))]">{eyebrow}</p>
       <h2 className="mt-3 text-3xl font-black tracking-tight text-brand-ink sm:text-4xl">{title}</h2>
       {description ? <p className="mt-3 text-base text-brand-sub">{description}</p> : null}
     </div>
@@ -74,7 +75,7 @@ export function StatCard({
         {icon ? <span className="text-base">{icon}</span> : null}
       </div>
       <div className="my-1.5 text-[22px] font-extrabold text-brand-ink">{value}</div>
-      {trend ? <div className="text-[10.5px] font-bold text-brand-green-dark">{trend}</div> : null}
+      {trend ? <div className="text-[10.5px] font-bold text-[var(--accent-dark,var(--color-brand-green-dark))]">{trend}</div> : null}
     </div>
   );
 }
@@ -119,7 +120,7 @@ export function CatalogProductCard({
   return (
     <div className="relative rounded-[10px] border border-brand-line bg-white p-3">
       {tag ? (
-        <span className="absolute left-4 top-4 z-10 rounded-[4px] bg-brand-green px-[7px] py-[2px] text-[9.5px] font-extrabold uppercase tracking-[0.02em] text-white">
+        <span className="absolute left-4 top-4 z-10 rounded-[4px] bg-[var(--accent,var(--color-brand-green))] px-[7px] py-[2px] text-[9.5px] font-extrabold uppercase tracking-[0.02em] text-white">
           {tag}
         </span>
       ) : null}
@@ -134,7 +135,7 @@ export function CatalogProductCard({
           )}
         </div>
 
-        <div className="mt-2.5 min-h-[33px] text-[12.8px] font-bold leading-tight text-brand-ink group-hover:text-brand-green-dark">
+        <div className="mt-2.5 min-h-[33px] text-[12.8px] font-bold leading-tight text-brand-ink group-hover:text-[var(--accent-dark,var(--color-brand-green-dark))]">
           {name}
         </div>
         <div className="mt-0.5 mb-1.5 text-[11px] text-brand-sub">{sub ?? (inStock ? "In stock" : "Out of stock")}</div>
@@ -153,7 +154,7 @@ export function CatalogProductCard({
       {actions ?? (
         <a
           href={detailHref}
-          className="flex w-full items-center justify-center rounded-[7px] border border-brand-line bg-white py-2 text-[13px] font-semibold text-brand-ink transition hover:border-brand-green hover:text-brand-green-dark"
+          className="flex w-full items-center justify-center rounded-[7px] border border-brand-line bg-white py-2 text-[13px] font-semibold text-brand-ink transition hover:border-[var(--accent,var(--color-brand-green))] hover:text-[var(--accent-dark,var(--color-brand-green-dark))]"
         >
           View details
         </a>

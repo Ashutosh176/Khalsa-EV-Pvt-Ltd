@@ -12,3 +12,4 @@ tmp/
 *.tsbuildinfo
 apps/web/.certs/
 apps/api/uploads/
+backups/

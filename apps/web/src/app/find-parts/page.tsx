@@ -10,11 +10,11 @@ export const metadata = {
 
 export default function FindPartsPage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-slate-50 text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-green">Vehicle compatibility finder</p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-blue">Vehicle compatibility finder</p>
         <h1 className="mt-3 text-3xl font-black tracking-tight text-brand-ink sm:text-4xl">
           Find parts for your vehicle
         </h1>

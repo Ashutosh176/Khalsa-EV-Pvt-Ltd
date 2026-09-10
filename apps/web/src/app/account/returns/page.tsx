@@ -83,14 +83,14 @@ function ReturnsPageInner() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -113,7 +113,7 @@ function ReturnsPageInner() {
                       </p>
                     ) : null}
                     {success ? (
-                      <p className="rounded-[7px] bg-brand-green-light px-4 py-2.5 text-[12.5px] text-brand-green-dark" role="status">
+                      <p className="rounded-[7px] bg-brand-blue-light px-4 py-2.5 text-[12.5px] text-brand-blue-dark" role="status">
                         Return request submitted.
                       </p>
                     ) : null}
@@ -127,7 +127,7 @@ function ReturnsPageInner() {
                           setOrderId(e.target.value);
                           setOrderItemId("");
                         }}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       >
                         <option value="" disabled>
                           Select a delivered order
@@ -146,7 +146,7 @@ function ReturnsPageInner() {
                         <select
                           value={orderItemId}
                           onChange={(e) => setOrderItemId(e.target.value)}
-                          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                         >
                           <option value="">Whole order</option>
                           {selectedOrder.items.map((item) => (
@@ -166,7 +166,7 @@ function ReturnsPageInner() {
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={3}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       />
                     </label>
 

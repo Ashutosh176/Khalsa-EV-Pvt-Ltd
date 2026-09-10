@@ -57,14 +57,14 @@ export default function AccountOverviewPage() {
   const defaultAddress = addresses?.find((a) => a.isDefault) ?? addresses?.[0] ?? null;
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -98,7 +98,7 @@ export default function AccountOverviewPage() {
               <div className="mb-4 rounded-[10px] border border-brand-line p-4">
                 <div className="mb-2.5 flex items-center justify-between">
                   <b className="text-[13.5px]">Recent Orders</b>
-                  <Link href="/account/orders" className="text-[11.5px] font-semibold text-brand-green-dark">
+                  <Link href="/account/orders" className="text-[11.5px] font-semibold text-brand-blue-dark">
                     View All Orders →
                   </Link>
                 </div>
@@ -108,7 +108,7 @@ export default function AccountOverviewPage() {
                 ) : orders.length === 0 ? (
                   <p className="text-sm text-brand-sub">
                     You haven&apos;t placed any orders yet.{" "}
-                    <Link href="/products" className="font-semibold text-brand-green-dark">
+                    <Link href="/products" className="font-semibold text-brand-blue-dark">
                       Start shopping
                     </Link>
                   </p>
@@ -141,7 +141,7 @@ export default function AccountOverviewPage() {
                   <div className="mt-2 text-[11.8px]">
                     📍 {defaultAddress.fullName}{" "}
                     {defaultAddress.isDefault ? (
-                      <span className="rounded-[4px] bg-brand-green-light px-1.5 py-0.5 text-[9px] font-bold text-brand-green-dark">
+                      <span className="rounded-[4px] bg-brand-blue-light px-1.5 py-0.5 text-[9px] font-bold text-brand-blue-dark">
                         Default
                       </span>
                     ) : null}
@@ -151,7 +151,7 @@ export default function AccountOverviewPage() {
                 ) : (
                   <div className="mt-2 text-[11.8px] text-brand-sub">
                     No saved address yet.{" "}
-                    <Link href="/account/addresses" className="font-semibold text-brand-green-dark">
+                    <Link href="/account/addresses" className="font-semibold text-brand-blue-dark">
                       Add one
                     </Link>
                   </div>

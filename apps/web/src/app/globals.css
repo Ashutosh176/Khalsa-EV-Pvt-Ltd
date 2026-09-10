@@ -13,6 +13,12 @@
   --color-brand-green-deep: #155c27;
   --color-brand-green-light: #eaf7ec;
   --color-brand-green-line: #cdebd1;
+  /* Logo blue - sampled from the horse mark in /logo.png, paired with
+     brand-green (the logo's grass swoosh) as the site's second brand color. */
+  --color-brand-blue: #2d3f8f;
+  --color-brand-blue-dark: #202d68;
+  --color-brand-blue-light: #eaedfa;
+  --color-brand-blue-line: #ccd3f0;
   --color-brand-ink: #1a1d1f;
   --color-brand-charcoal: #13171a;
   --color-brand-charcoal2: #1b2024;
@@ -57,4 +63,22 @@ select {
 img {
   display: block;
   max-width: 100%;
+}
+
+/* Section theming: shared components (product gallery/buy box/tabs/card
+   actions) read --accent-* instead of a hardcoded brand color, so the same
+   component renders in the logo's blue on Electric Scooters pages and the
+   logo's green on Spare Parts pages, matching the Header's section tabs. */
+.theme-scooters {
+  --accent: var(--color-brand-blue);
+  --accent-dark: var(--color-brand-blue-dark);
+  --accent-light: var(--color-brand-blue-light);
+  --accent-line: var(--color-brand-blue-line);
+}
+
+.theme-spareparts {
+  --accent: var(--color-brand-green);
+  --accent-dark: var(--color-brand-green-dark);
+  --accent-light: var(--color-brand-green-light);
+  --accent-line: var(--color-brand-green-line);
 }

@@ -110,12 +110,14 @@ export function ProductBuyBox({
         type="button"
         onClick={handleWishlist}
         disabled={busy}
-        className="w-full rounded-[7px] border border-brand-line bg-white py-2.5 text-[13px] font-semibold text-brand-ink transition hover:border-brand-green"
+        className="w-full rounded-[7px] border border-brand-line bg-white py-2.5 text-[13px] font-semibold text-brand-ink transition hover:border-[var(--accent,var(--color-brand-green))]"
       >
         ♡ Add to Wishlist
       </button>
 
-      {status ? <p className="mt-3 text-[12.5px] font-medium text-brand-green-dark">{status}</p> : null}
+      {status ? (
+        <p className="mt-3 text-[12.5px] font-medium text-[var(--accent-dark,var(--color-brand-green-dark))]">{status}</p>
+      ) : null}
     </div>
   );
 }

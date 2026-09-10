@@ -26,14 +26,14 @@ export default function CartPage() {
   const progressPercent = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD_PAISE) * 100));
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       {!authLoading && !user ? (
         <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-7">
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view and manage your cart.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -44,7 +44,7 @@ export default function CartPage() {
         <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-7">
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Your cart is empty.</p>
-            <Link href="/products" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/products" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Browse products
             </Link>
           </div>
@@ -54,13 +54,13 @@ export default function CartPage() {
           <div className="flex-1">
             <div className="mb-3 flex items-center justify-between">
               <h1 className="text-[23px] font-bold">Your Cart ({activeItems.length} items)</h1>
-              <Link href="/products" className="text-[12.5px] font-semibold text-brand-green-dark">
+              <Link href="/products" className="text-[12.5px] font-semibold text-brand-blue-dark">
                 ← Continue Shopping
               </Link>
             </div>
 
             {activeItems.length > 0 ? (
-              <div className="mb-3.5 rounded-[10px] bg-brand-green-light p-3.5">
+              <div className="mb-3.5 rounded-[10px] bg-brand-blue-light p-3.5">
                 {qualifiesForFreeShipping ? (
                   <div className="text-[12.5px]">🛡️ Yay! You&apos;re getting FREE delivery on this order</div>
                 ) : (
@@ -69,7 +69,7 @@ export default function CartPage() {
                       Add {formatIndianRupees(remainingForFreeShipping)} more to get FREE delivery
                     </div>
                     <div className="h-[5px] rounded-full bg-[#D5EAD8]">
-                      <div className="h-[5px] rounded-full bg-brand-green" style={{ width: `${progressPercent}%` }} />
+                      <div className="h-[5px] rounded-full bg-brand-blue" style={{ width: `${progressPercent}%` }} />
                     </div>
                   </>
                 )}
@@ -89,12 +89,12 @@ export default function CartPage() {
                       )}
                     </div>
                     <div className="min-w-[160px] flex-1">
-                      <Link href={`/products/${item.product.slug}`} className="text-[13px] font-bold hover:text-brand-green-dark">
+                      <Link href={`/products/${item.product.slug}`} className="text-[13px] font-bold hover:text-brand-blue-dark">
                         {item.product.name}
                       </Link>
                       <div className="mt-0.5 text-[10.8px] text-brand-sub">
                         {item.inStock ? (
-                          <span className="text-brand-green-dark">✓ In Stock</span>
+                          <span className="text-brand-blue-dark">✓ In Stock</span>
                         ) : (
                           <span className="text-brand-red">Insufficient stock</span>
                         )}{" "}
@@ -145,7 +145,7 @@ export default function CartPage() {
                         <p className="text-xs text-brand-sub">{formatIndianRupees(item.unitPrice)}</p>
                       </div>
                       <div className="flex gap-3.5 text-xs">
-                        <button type="button" onClick={() => updateItem(item.id, { savedForLater: false })} className="font-semibold text-brand-green-dark">
+                        <button type="button" onClick={() => updateItem(item.id, { savedForLater: false })} className="font-semibold text-brand-blue-dark">
                           Move to cart
                         </button>
                         <button type="button" onClick={() => removeItem(item.id)} className="text-brand-sub hover:text-brand-red">
@@ -170,7 +170,7 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between text-brand-sub">
                     <span>Shipping</span>
-                    <b className={shippingAmount === 0 ? "text-brand-green-dark" : "text-brand-ink"}>
+                    <b className={shippingAmount === 0 ? "text-brand-blue-dark" : "text-brand-ink"}>
                       {shippingAmount === 0 ? "FREE" : formatIndianRupees(shippingAmount)}
                     </b>
                   </div>
@@ -180,11 +180,11 @@ export default function CartPage() {
                   <span>{formatIndianRupees(subtotal + shippingAmount)}</span>
                 </div>
                 <Link
-                  href="/checkout"
-                  className="mt-4 flex w-full items-center justify-center rounded-[7px] bg-brand-green py-2.5 text-[13px] font-semibold text-white hover:bg-brand-green-dark"
-                >
-                  Proceed to Checkout →
-                </Link>
+  href="/checkout"
+  className="mt-4 flex w-full items-center justify-center rounded-[7px] bg-brand-blue py-2.5 text-[13px] font-semibold !text-white hover:bg-brand-blue-dark"
+>
+  Proceed to Checkout →
+</Link>
                 <div className="mt-2.5 text-center text-[10.5px] text-brand-sub">Secured by VISA · MasterCard · UPI · RuPay</div>
               </div>
             </div>

@@ -56,7 +56,7 @@ export function ProductCardActions({ productId, inStock }: { productId: string; 
           type="button"
           onClick={handleAddToCart}
           disabled={!inStock || adding}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-[7px] bg-brand-green py-2 text-[13px] font-semibold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-[7px] bg-[var(--accent,var(--color-brand-green))] py-2 text-[13px] font-semibold text-white transition hover:bg-[var(--accent-dark,var(--color-brand-green-dark))] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {added ? "Added ✓" : adding ? "Adding..." : inStock ? "Add to Cart 🛒" : "Out of stock"}
         </button>
@@ -64,7 +64,7 @@ export function ProductCardActions({ productId, inStock }: { productId: string; 
           type="button"
           onClick={handleWishlist}
           aria-label="Add to wishlist"
-          className="flex w-9 shrink-0 items-center justify-center rounded-[7px] border border-brand-line bg-white text-base transition hover:border-brand-green"
+          className="flex w-9 shrink-0 items-center justify-center rounded-[7px] border border-brand-line bg-white text-base transition hover:border-[var(--accent,var(--color-brand-green))]"
         >
           {wishlisted ? "❤" : "♡"}
         </button>

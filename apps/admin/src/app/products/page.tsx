@@ -40,7 +40,9 @@ function ProductsContent() {
   const pageSize = 20;
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => undefined);
+    getCategories()
+      .then((all) => setCategories(all.filter((c) => c.slug !== "electric-scooters")))
+      .catch(() => undefined);
     getBrands().then(setBrands).catch(() => undefined);
   }, []);
 
@@ -118,7 +120,7 @@ function ProductsContent() {
             <div className="flex flex-wrap gap-2.5 border-b border-brand-line p-3.5">
               <input
                 type="search"
-                placeholder="Search products by name, SKU, brand..."
+                placeholder="Search products by name, SKU, model..."
                 value={search}
                 onChange={(e) => {
                   setPage(1);
@@ -150,7 +152,7 @@ function ProductsContent() {
                   }}
                   className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
                 >
-                  <option value="">All Brands</option>
+                  <option value="">All Models</option>
                   {brands.map((brand) => (
                     <option key={brand.id} value={brand.id}>
                       {brand.name}
@@ -183,7 +185,6 @@ function ProductsContent() {
                 <option value="">All Types</option>
                 <option value="SPARE_PART">Spare Part</option>
                 <option value="SCOOTER">Scooter</option>
-                <option value="ACCESSORY">Accessory</option>
               </select>
             </div>
 

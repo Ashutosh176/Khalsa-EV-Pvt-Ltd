@@ -25,7 +25,7 @@ export function ProductGallery({
               type="button"
               onClick={() => setActiveIndex(i)}
               className={`h-[52px] w-[52px] overflow-hidden rounded-lg border ${
-                i === activeIndex ? "border-brand-green" : "border-brand-line"
+                i === activeIndex ? "border-[var(--accent,var(--color-brand-green))]" : "border-brand-line"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- product images are remote */}

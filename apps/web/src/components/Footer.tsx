@@ -14,12 +14,13 @@ export function Footer() {
 
   useEffect(() => {
     getCategories()
-      .then(setCategories)
+      .then((all) => setCategories(all.filter((c) => c.slug !== "electric-scooters")))
       .catch(() => setCategories([]));
   }, []);
 
   return (
     <footer id="support">
+      <div className="h-[3px] bg-gradient-to-r from-brand-blue via-brand-blue to-brand-green" />
       <div className="border-y border-brand-line">
         <TrustStrip />
       </div>
@@ -28,7 +29,7 @@ export function Footer() {
         <div className="mx-auto grid max-w-[1440px] grid-cols-2 gap-6 border-b border-[#2A2E32] px-4 pb-7 sm:px-7 md:grid-cols-3 lg:grid-cols-6 lg:gap-5">
           <div className="col-span-2 md:col-span-3 lg:col-span-1">
             <div className="mb-2.5 inline-block rounded-xl bg-white px-2.5 py-1.5">
-              <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-8 w-auto" />
+              <Image src="/logo.png" alt="Khalsa EV" width={1774} height={887} className="h-8 w-auto" />
             </div>
             <p className="my-2 max-w-xs text-[11.3px] leading-relaxed">
               India&apos;s most trusted destination for genuine EV spare parts &amp; accessories.
@@ -37,13 +38,13 @@ export function Footer() {
 
           <div>
             <h5 className="mb-2.5 text-[12.5px] font-bold text-white">Shop</h5>
-            <Link href="/products" className="block py-1 text-[11.3px] leading-[2] hover:text-white">
+            <Link href="/spare-parts/products" className="block py-1 text-[11.3px] leading-[2] hover:text-white">
               All Products
             </Link>
             {categories.slice(0, 5).map((category) => (
               <Link
                 key={category.id}
-                href={`/products?categoryId=${category.id}`}
+                href={`/spare-parts/products?categoryId=${category.id}`}
                 className="block py-1 text-[11.3px] leading-[2] hover:text-white"
               >
                 {category.name}

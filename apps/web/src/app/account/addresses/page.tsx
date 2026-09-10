@@ -106,14 +106,14 @@ export default function AddressesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -142,7 +142,7 @@ export default function AddressesPage() {
                         required
                         value={form.fullName}
                         onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       />
                     </label>
                     <label className="block">
@@ -151,7 +151,7 @@ export default function AddressesPage() {
                         required
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       />
                     </label>
                   </div>
@@ -162,7 +162,7 @@ export default function AddressesPage() {
                       required
                       value={form.line1}
                       onChange={(e) => setForm({ ...form, line1: e.target.value })}
-                      className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                      className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                     />
                   </label>
 
@@ -171,7 +171,7 @@ export default function AddressesPage() {
                     <input
                       value={form.line2}
                       onChange={(e) => setForm({ ...form, line2: e.target.value })}
-                      className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                      className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                     />
                   </label>
 
@@ -182,7 +182,7 @@ export default function AddressesPage() {
                         required
                         value={form.city}
                         onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       />
                     </label>
                     <label className="block">
@@ -191,7 +191,7 @@ export default function AddressesPage() {
                         required
                         value={form.state}
                         onChange={(e) => setForm({ ...form, state: e.target.value })}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       />
                     </label>
                     <label className="block">
@@ -200,7 +200,7 @@ export default function AddressesPage() {
                         required
                         value={form.postalCode}
                         onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
-                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+                        className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
                       />
                     </label>
                   </div>
@@ -241,7 +241,7 @@ export default function AddressesPage() {
                           <p className="text-[12.5px] text-brand-sub">{address.phone}</p>
                         </div>
                         {address.isDefault ? (
-                          <span className="rounded-[4px] bg-brand-green-light px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-green-dark">
+                          <span className="rounded-[4px] bg-brand-blue-light px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand-blue-dark">
                             Default
                           </span>
                         ) : null}
@@ -251,7 +251,7 @@ export default function AddressesPage() {
                         {address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state} {address.postalCode}
                       </p>
                       <div className="mt-3 flex flex-wrap gap-3.5 text-[12px] font-semibold">
-                        <button type="button" onClick={() => startEdit(address)} className="text-brand-green-dark">
+                        <button type="button" onClick={() => startEdit(address)} className="text-brand-blue-dark">
                           Edit
                         </button>
                         {!address.isDefault ? (

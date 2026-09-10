@@ -4,16 +4,9 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@khalsa-ev/ui";
 import { PhoneOtpVerifier } from "../../components/PhoneOtpVerifier";
+import { UserIcon, MailIcon, LockIcon, EyeIcon, EyeOffIcon } from "../../components/AuthIcons";
 import { useAuth } from "../../lib/auth-context";
-
-const HIGHLIGHTS: [string, string, string][] = [
-  ["🏷️", "Exclusive Offers", "Get access to member-only deals and discounts."],
-  ["⚡", "Easy & Fast Shopping", "Save addresses, quicker checkout and order tracking."],
-  ["♡", "Wishlist & More", "Save your favorite products and shop anytime."],
-  ["🛡️", "Secure & Reliable", "Your data is safe with us. Shop with confidence."],
-];
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -23,6 +16,8 @@ export default function RegisterPage() {
   const [verifiedPhone, setVerifiedPhone] = useState<{ phone: string; verificationId: string } | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,116 +50,138 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
-      <div className="flex flex-col lg:min-h-screen lg:flex-row">
-        <div className="hidden flex-col justify-center bg-gradient-to-br from-[#EEF5EC] to-white p-12 lg:flex lg:flex-1">
-          <Link href="/" className="mb-6 flex items-center">
-            <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-10 w-auto" priority />
-          </Link>
-          <div className="text-[26px] font-extrabold leading-tight">
-            Create Your Account
-            <br />
-            <span className="text-brand-green-dark">and Drive the Change!</span>
-          </div>
-          <p className="my-3 max-w-[340px] text-[13px] text-brand-sub">
-            Join Khalsa EV Spare Parts and enjoy a seamless shopping experience with exclusive benefits.
-          </p>
-          {HIGHLIGHTS.map(([icon, title, sub]) => (
-            <div key={title} className="mb-3 flex items-center gap-2.5 text-[12.5px]">
-              <span className="text-[17px]">{icon}</span>
-              <span>
-                <b>{title}</b>
-                <br />
-                <span className="text-brand-sub">{sub}</span>
-              </span>
-            </div>
-          ))}
-          <div className="mt-3.5 text-[70px] leading-none">🛵🔋</div>
-        </div>
+    <main className="theme-scooters relative min-h-screen overflow-x-hidden text-brand-ink">
+      {/* Full-viewport background - fixed so it always covers 100% of the
+          screen regardless of how tall the form makes the page, independent
+          of scroll position. */}
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src="/auth-bg-clean.png"
+          alt="Khalsa EV - electric scooter, genuine spare parts and Khalsa EV branding"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        {/* Subtle, targeted darkening behind the card only - the rest of the
+            scene (scooter, parts, logo) stays at full brightness. */}
+        <div className="absolute inset-0 bg-gradient-to-l from-black/25 via-black/5 to-transparent" />
+      </div>
 
-        <div className="flex flex-1 items-center justify-center px-4 py-12">
-          <div className="w-full max-w-[380px]">
-            <h1 className="mb-0.5 text-center text-[21px] font-bold">Create Your Account</h1>
-            <p className="mb-4 text-center text-[12.5px] text-brand-sub">Join Khalsa EV Spare Parts today</p>
+      <div className="flex min-h-screen items-center justify-center px-4 py-12 lg:justify-end lg:px-16 xl:px-24">
+        <div className="w-full max-w-[480px] rounded-[28px] bg-white/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
+          <h1 className="mb-1 text-center text-[24px] font-bold">Create Your Account</h1>
+          <p className="mb-6 text-center text-[13px] text-brand-sub">Join Khalsa EV Spare Parts today</p>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {error ? (
-                <p className="rounded-[7px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
-                  {error}
-                </p>
-              ) : null}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error ? (
+              <p className="rounded-[12px] bg-red-50 px-4 py-2.5 text-[12.5px] text-brand-red" role="alert">
+                {error}
+              </p>
+            ) : null}
 
-              <label className="block">
-                <span className="text-[11.5px] font-bold">Full Name</span>
+            <label className="block">
+              <span className="mb-1.5 block text-[12px] font-bold">Full Name</span>
+              <span className="relative block">
+                <UserIcon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-brand-sub" />
                 <input
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your full name"
-                  className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
+                  className="w-full rounded-full border border-brand-line py-3 pl-11 pr-4 text-[13px] outline-none focus:border-brand-blue"
                 />
-              </label>
+              </span>
+            </label>
 
-              <PhoneOtpVerifier
-                purpose="REGISTER"
-                onVerified={(phone, verificationId) => setVerifiedPhone({ phone, verificationId })}
-              />
+            <PhoneOtpVerifier
+              purpose="REGISTER"
+              onVerified={(phone, verificationId) => setVerifiedPhone({ phone, verificationId })}
+            />
 
-              <label className="block">
-                <span className="text-[11.5px] font-bold">Email Address</span>
+            <label className="block">
+              <span className="mb-1.5 block text-[12px] font-bold">Email Address</span>
+              <span className="relative block">
+                <MailIcon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-brand-sub" />
                 <input
                   required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
-                  className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
+                  className="w-full rounded-full border border-brand-line py-3 pl-11 pr-4 text-[13px] outline-none focus:border-brand-blue"
                 />
-              </label>
+              </span>
+            </label>
 
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-[11.5px] font-bold">Password</span>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1.5 block text-[12px] font-bold">Password</span>
+                <span className="relative block">
+                  <LockIcon className="pointer-events-none absolute left-4 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-brand-sub" />
                   <input
                     required
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password"
-                    className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
+                    placeholder="Password"
+                    className="w-full rounded-full border border-brand-line py-3 pl-10 pr-9 text-[12.5px] outline-none focus:border-brand-blue"
                   />
-                </label>
-                <label className="block">
-                  <span className="text-[11.5px] font-bold">Confirm Password</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-sub hover:text-brand-ink"
+                  >
+                    {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  </button>
+                </span>
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-[12px] font-bold">Confirm Password</span>
+                <span className="relative block">
+                  <LockIcon className="pointer-events-none absolute left-4 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-brand-sub" />
                   <input
                     required
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your password"
-                    className="mt-1 w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
+                    placeholder="Confirm password"
+                    className="w-full rounded-full border border-brand-line py-3 pl-10 pr-9 text-[12.5px] outline-none focus:border-brand-blue"
                   />
-                </label>
-              </div>
-              <div className="text-[10.8px] text-brand-green-dark">✓ At least 8 characters</div>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-sub hover:text-brand-ink"
+                  >
+                    {showConfirmPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  </button>
+                </span>
+              </label>
+            </div>
+            <div className="text-[10.8px] text-brand-blue-dark">✓ At least 8 characters</div>
 
-              <Button type="submit" className="w-full" disabled={submitting || !verifiedPhone}>
-                {submitting ? "Creating account..." : "Create Account"}
-              </Button>
-              {!verifiedPhone ? (
-                <p className="text-center text-[10.5px] text-brand-sub">Verify your mobile number to continue</p>
-              ) : null}
-            </form>
+            <button
+              type="submit"
+              disabled={submitting || !verifiedPhone}
+              className="w-full rounded-full bg-brand-blue-dark py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-brand-blue disabled:opacity-60"
+            >
+              {submitting ? "Creating account..." : "Create Account"}
+            </button>
+            {!verifiedPhone ? (
+              <p className="text-center text-[10.5px] text-brand-sub">Verify your mobile number to continue</p>
+            ) : null}
+          </form>
 
-            <p className="mt-4 text-center text-xs">
-              Already have an account?{" "}
-              <Link href="/login" className="font-bold text-brand-green-dark">
-                Login
-              </Link>
-            </p>
-          </div>
+          <p className="mt-5 text-center text-[13px]">
+            Already have an account?{" "}
+            <Link href="/login" className="font-bold text-brand-blue-dark">
+              Login
+            </Link>
+          </p>
         </div>
       </div>
     </main>

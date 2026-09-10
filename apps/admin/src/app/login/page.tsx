@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-brand-surface px-4">
       <div className="w-full max-w-sm">
         <div className="mb-7 flex flex-col items-center">
-          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-14 w-auto" priority />
+          <Image src="/logo.png" alt="Khalsa EV" width={1774} height={887} className="h-14 w-auto" priority />
           <h1 className="mt-3.5 text-[21px] font-bold">Khalsa EV Admin</h1>
           <p className="text-[13px] text-brand-sub">Sign in to manage your store</p>
         </div>

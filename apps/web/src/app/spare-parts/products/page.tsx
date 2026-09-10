@@ -3,58 +3,72 @@ import { CatalogProductCard } from "@khalsa-ev/ui";
 import { Header } from "../../../components/Header";
 import { Footer } from "../../../components/Footer";
 import { ProductCardActions } from "../../../components/ProductCardActions";
-import { getBrands, getCatalogProducts } from "../../../lib/api";
+import { getBrands, getCatalogProducts, getCategories } from "../../../lib/api";
 
 export const metadata = {
-  title: "Electric Scooters | Khalsa EV",
-  description: "Browse Khalsa EV's electric scooter lineup - compare battery, motor, range and price.",
+  title: "Shop EV Spare Parts | Khalsa EV",
+  description: "Browse genuine electric vehicle spare parts and accessories, with vehicle compatibility guidance.",
 };
 
 function toStringParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-export default async function ElectricScootersListingPage({
+export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
   const search = toStringParam(params.search);
+  const categoryId = toStringParam(params.categoryId);
   const brandId = toStringParam(params.brandId);
   const priceMin = toStringParam(params.priceMin);
   const priceMax = toStringParam(params.priceMax);
-  const featured = toStringParam(params.featured) === "true";
   const page = Number(toStringParam(params.page) ?? "1") || 1;
 
-  const [brands, catalog] = await Promise.all([
-    getBrands({ productType: "SCOOTER" }),
+  const [allCategories, brands, catalog] = await Promise.all([
+    getCategories(),
+    getBrands({ productType: "SPARE_PART" }),
     getCatalogProducts({
-      productType: "SCOOTER",
+      productType: "SPARE_PART",
       search,
+      categoryId,
       brandId,
       priceMin: priceMin ? Number(priceMin) : undefined,
       priceMax: priceMax ? Number(priceMax) : undefined,
-      featured: featured || undefined,
       sort: "newest",
       page,
       pageSize: 12,
     }),
   ]);
+  // "Electric Scooters" belongs to the Scooters section's Model list now,
+  // not Spare Parts category browsing - see spare-parts/page.tsx.
+  const categories = allCategories.filter((c) => c.slug !== "electric-scooters");
 
   const totalPages = Math.max(1, Math.ceil(catalog.total / catalog.pageSize));
-  const selectedBrand = brands.find((b) => b.id === brandId);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-spareparts min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 pt-3.5 text-xs text-brand-sub sm:px-7">
-        <Link href="/electric-scooters" className="hover:text-brand-green-dark">
-          Electric Scooters
+        <Link href="/spare-parts/products" className="hover:text-brand-green-dark">
+          Home
         </Link>
         {" › "}
-        <span className="text-brand-ink">{selectedBrand ? selectedBrand.name : "All Scooters"}</span>
+        {selectedCategory ? (
+          <>
+            <Link href="/spare-parts/products" className="hover:text-brand-green-dark">
+              Categories
+            </Link>
+            {" › "}
+            <span className="text-brand-ink">{selectedCategory.name}</span>
+          </>
+        ) : (
+          <span className="text-brand-ink">All Products</span>
+        )}
       </div>
 
       <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-4 py-7 sm:px-7 lg:flex-row lg:items-start">
@@ -62,9 +76,23 @@ export default async function ElectricScootersListingPage({
           <form method="get" className="rounded-[10px] border border-brand-line p-4">
             <div className="mb-2.5 flex items-center justify-between text-[12.5px] font-bold">
               <span>FILTERS</span>
-              <Link href="/electric-scooters/products" className="text-[11.5px] font-semibold text-brand-green-dark">
+              <Link href="/spare-parts/products" className="text-[11.5px] font-semibold text-brand-green-dark">
                 Clear All
               </Link>
+            </div>
+
+            <div className="mb-4">
+              <div className="mb-2 text-xs font-bold">Category</div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-[11.8px] text-[#3A3E42]">
+                <input type="radio" name="categoryId" value="" defaultChecked={!categoryId} />
+                All Categories
+              </label>
+              {categories.map((category) => (
+                <label key={category.id} className="mb-1.5 flex items-center gap-1.5 text-[11.8px] text-[#3A3E42]">
+                  <input type="radio" name="categoryId" value={category.id} defaultChecked={category.id === categoryId} />
+                  {category.name}
+                </label>
+              ))}
             </div>
 
             {brands.length > 0 ? (
@@ -104,7 +132,6 @@ export default async function ElectricScootersListingPage({
               </div>
             </div>
 
-            {featured ? <input type="hidden" name="featured" value="true" /> : null}
             {search ? <input type="hidden" name="search" value={search} /> : null}
 
             <button type="submit" className="w-full rounded-[7px] bg-brand-green py-2.5 text-[13px] font-semibold text-white hover:bg-brand-green-dark">
@@ -116,9 +143,9 @@ export default async function ElectricScootersListingPage({
         <div className="flex-1">
           <div className="mb-3.5 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h1 className="m-0 text-[23px] font-bold">{selectedBrand ? selectedBrand.name : "All Scooters"}</h1>
+              <h1 className="m-0 text-[23px] font-bold">{selectedCategory ? selectedCategory.name : "All Products"}</h1>
               <p className="mt-1 text-[13px] text-brand-sub">
-                {featured ? "Our featured electric scooter models." : "Compare battery, motor power, range and price."}
+                {selectedCategory?.description ?? "Genuine EV spare parts and accessories for every vehicle."}
               </p>
             </div>
             <div className="text-xs text-brand-sub">
@@ -128,27 +155,22 @@ export default async function ElectricScootersListingPage({
 
           {catalog.items.length === 0 ? (
             <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center text-brand-sub">
-              No scooters match your search yet.
+              No products match your search yet.
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {catalog.items.map((scooter) => (
+              {catalog.items.map((product) => (
                 <CatalogProductCard
-                  key={scooter.id}
-                  slug={scooter.slug}
-                  name={scooter.name}
-                  sub={
-                    scooter.scooterSpec
-                      ? `${scooter.scooterSpec.rangeKm} km range · ${scooter.scooterSpec.topSpeedKmh} km/h`
-                      : scooter.brand?.name
-                  }
-                  price={scooter.price}
-                  mrp={scooter.mrp}
-                  inStock={scooter.inStock}
-                  imageUrl={scooter.images[0]?.url}
-                  href={`/electric-scooters/products/${scooter.slug}`}
-                  fallbackIcon="🛵"
-                  actions={<ProductCardActions productId={scooter.id} inStock={scooter.inStock} />}
+                  key={product.id}
+                  slug={product.slug}
+                  name={product.name}
+                  sub={product.brand?.name}
+                  price={product.price}
+                  mrp={product.mrp}
+                  inStock={product.inStock}
+                  imageUrl={product.images[0]?.url}
+                  href={`/spare-parts/products/${product.slug}`}
+                  actions={<ProductCardActions productId={product.id} inStock={product.inStock} />}
                 />
               ))}
             </div>
@@ -159,16 +181,16 @@ export default async function ElectricScootersListingPage({
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => {
                 const query = new URLSearchParams();
                 if (search) query.set("search", search);
+                if (categoryId) query.set("categoryId", categoryId);
                 if (brandId) query.set("brandId", brandId);
                 if (priceMin) query.set("priceMin", priceMin);
                 if (priceMax) query.set("priceMax", priceMax);
-                if (featured) query.set("featured", "true");
                 query.set("page", String(pageNumber));
 
                 return (
                   <a
                     key={pageNumber}
-                    href={`/electric-scooters/products?${query.toString()}`}
+                    href={`/spare-parts/products?${query.toString()}`}
                     className={`rounded-[6px] px-3 py-1.5 font-semibold ${
                       pageNumber === page ? "bg-brand-green text-white" : "border border-brand-line text-brand-ink"
                     }`}

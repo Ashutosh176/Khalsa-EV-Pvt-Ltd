@@ -26,7 +26,7 @@ export function Sidebar() {
     <aside className="flex h-screen w-[230px] flex-shrink-0 flex-col bg-brand-charcoal py-4 text-[#B7BBBE]">
       <div className="mb-2.5 flex items-center gap-2 border-b border-[#2A2E32] px-[18px] pb-4">
         <div className="rounded-lg bg-white px-2 py-1">
-          <Image src="/logo.png" alt="Khalsa EV" width={292} height={162} className="h-6 w-auto" priority />
+          <Image src="/logo.png" alt="Khalsa EV" width={1774} height={887} className="h-6 w-auto" priority />
         </div>
         <span className="text-xs text-[#9AA0A4]">Admin panel</span>
       </div>

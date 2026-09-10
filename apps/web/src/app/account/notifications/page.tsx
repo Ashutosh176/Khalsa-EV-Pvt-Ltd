@@ -13,14 +13,14 @@ export default function NotificationsPage() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -52,7 +52,7 @@ export default function NotificationsPage() {
                       type="button"
                       onClick={() => (n.isRead ? undefined : markRead(n.id))}
                       className={`flex w-full items-start justify-between gap-4 px-4 py-3.5 text-left text-[13px] ${
-                        n.isRead ? "" : "bg-brand-green-light"
+                        n.isRead ? "" : "bg-brand-blue-light"
                       }`}
                     >
                       <div>
@@ -60,7 +60,7 @@ export default function NotificationsPage() {
                         <p className="mt-1 text-brand-sub">{n.message}</p>
                         <p className="mt-1 text-xs text-brand-sub">{new Date(n.createdAt).toLocaleString("en-IN")}</p>
                       </div>
-                      {!n.isRead ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" /> : null}
+                      {!n.isRead ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-blue" /> : null}
                     </button>
                   ))}
                 </div>

@@ -110,14 +110,14 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -126,7 +126,7 @@ export default function OrderDetailPage() {
             <AccountNav />
 
             <div className="flex-1 space-y-4">
-              <Link href="/account/orders" className="text-[12.5px] font-semibold text-brand-green-dark">
+              <Link href="/account/orders" className="text-[12.5px] font-semibold text-brand-blue-dark">
                 &larr; Back to orders
               </Link>
 
@@ -180,7 +180,7 @@ export default function OrderDetailPage() {
                     <ol className="mt-3.5 space-y-3">
                       {order.statusHistory.map((entry) => (
                         <li key={entry.id} className="flex items-start gap-2.5 text-[12.5px]">
-                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" />
+                          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-blue" />
                           <div>
                             <p className="font-bold">{STATUS_LABELS[entry.status] ?? entry.status}</p>
                             <p className="text-xs text-brand-sub">
@@ -207,7 +207,7 @@ export default function OrderDetailPage() {
                             href={order.shipment.trackingUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-block font-semibold text-brand-green-dark"
+                            className="inline-block font-semibold text-brand-blue-dark"
                           >
                             Track shipment
                           </a>
@@ -262,7 +262,7 @@ export default function OrderDetailPage() {
                   {order.status === "DELIVERED" ? (
                     <Link
                       href={`/account/returns?orderId=${order.id}`}
-                      className="inline-block text-[12.5px] font-semibold text-brand-green-dark"
+                      className="inline-block text-[12.5px] font-semibold text-brand-blue-dark"
                     >
                       Request a return for this order
                     </Link>

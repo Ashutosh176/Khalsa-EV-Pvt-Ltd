@@ -35,9 +35,30 @@ export function ScooterHeroCarousel() {
 
   useEffect(() => {
     if (paused) return;
-    const timer = setInterval(() => setIndex((i) => i + 1), AUTOPLAY_MS);
+    // Never advance past the clone slide (index === slideCount) - only
+    // handleTransitionEnd's snap-back is allowed to move off it. If the
+    // browser skips or delays that transitionend event (a backgrounded
+    // tab suspends CSS transitions, a dropped frame, etc.), this timer
+    // would otherwise keep incrementing index forever, scrolling the
+    // track past every rendered slide into empty space (rendering as a
+    // black gap) instead of just holding on the clone until it resets.
+    const timer = setInterval(() => setIndex((i) => (i >= slideCount ? i : i + 1)), AUTOPLAY_MS);
     return () => clearInterval(timer);
-  }, [paused]);
+  }, [paused, slideCount]);
+
+  // Fallback for the clone -> first-slide snap in case the browser never
+  // delivers transitionend at all (observed in practice: a backgrounded
+  // or throttled tab can suspend the CSS transition indefinitely). Without
+  // this, the interval guard above would hold index at slideCount forever
+  // once transitionend is skipped, freezing the carousel on the clone.
+  useEffect(() => {
+    if (index !== slideCount) return;
+    const timeout = setTimeout(() => {
+      setWithTransition(false);
+      setIndex(0);
+    }, TRANSITION_MS + 200);
+    return () => clearTimeout(timeout);
+  }, [index, slideCount]);
 
   // Re-arms the transition one frame after a transition-free snap - doing
   // it synchronously with the snap would let React batch both style changes
@@ -86,7 +107,12 @@ export function ScooterHeroCarousel() {
               src={slide.src}
               alt={slide.alt}
               fill
-              priority={i < slideCount}
+              // All slides (including the appended clone used for the
+              // seamless wrap) are mounted upfront and every one of them
+              // WILL be shown on a loop - lazy-loading the clone left it
+              // unfetched until the wrap transition needed it, rendering
+              // as a black flash instead of slide 1's image.
+              priority
               sizes="100vw"
               className="object-cover object-[68%_center] sm:object-[62%_center] lg:object-center"
             />
@@ -103,7 +129,7 @@ export function ScooterHeroCarousel() {
             aria-current={i === activeDot}
             onClick={() => handleDotClick(i)}
             className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === activeDot ? "w-5 bg-brand-green" : "w-1.5 bg-white/60 hover:bg-white/80"
+              i === activeDot ? "w-5 bg-brand-blue" : "w-1.5 bg-white/60 hover:bg-white/80"
             }`}
           />
         ))}

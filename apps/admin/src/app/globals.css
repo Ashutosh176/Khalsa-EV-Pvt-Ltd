@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Tailwind v4 auto-scans this app's own tree only - shared components in
+   packages/ui live outside it, so any class used ONLY there (never
+   duplicated in apps/admin source) silently generates no CSS. See
+   apps/web/src/app/globals.css for the same note - this was missing here,
+   which is why the shared Button component's CSS-var classes (used by e.g.
+   the Add/Edit Product submit button) rendered with no background. */
+@source "../../../../packages/ui/src";
+
 /* Design tokens matching the approved Figma reference
    (Khalsa_EV_Spare_Parts_Figma_Screens.html), same as apps/web. */
 @theme {

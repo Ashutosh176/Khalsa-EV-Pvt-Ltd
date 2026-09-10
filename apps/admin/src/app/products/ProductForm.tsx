@@ -135,7 +135,9 @@ export function ProductForm({ mode, product }: Props) {
 
   const [sku, setSku] = useState(product?.sku ?? "");
   const [name, setName] = useState(product?.name ?? "");
-  const [productType, setProductType] = useState<ProductType>(product?.productType ?? "SPARE_PART");
+  // Blank until the admin actively picks one (create mode only) - Category
+  // and Model only make sense once we know which of the two they apply to.
+  const [productType, setProductType] = useState<ProductType | "">(product?.productType ?? "");
   const [scooterSpec, setScooterSpec] = useState<ScooterSpecForm>(
     product?.scooterSpec ? scooterSpecToForm(product.scooterSpec) : emptyScooterSpecForm(),
   );
@@ -196,6 +198,23 @@ export function ProductForm({ mode, product }: Props) {
     setPendingFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
+  // Every Scooter product lives under the single "Electric Scooters"
+  // category (there's no meaningful choice there), so that field is hidden
+  // for Scooters and this id is filled in for them automatically instead.
+  const electricScootersCategory = categories.find((c) => c.slug === "electric-scooters");
+
+  function handleProductTypeChange(value: ProductType | "") {
+    setProductType(value);
+    if (value === "SCOOTER") {
+      setCategoryId(electricScootersCategory?.id ?? "");
+    } else {
+      // Leaving Scooter (or picking a type for the first time) - the
+      // auto-filled Electric Scooters category no longer applies.
+      setCategoryId((current) => (current === electricScootersCategory?.id ? "" : current));
+      setBrandId("");
+    }
+  }
+
   async function handleImageDelete(imageId: string) {
     if (!accessToken || !product) return;
     setImageError(null);
@@ -218,22 +237,40 @@ export function ProductForm({ mode, product }: Props) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!accessToken) return;
+    if (!accessToken || !productType) return;
     setError(null);
+
+    if (productType === "SCOOTER" && !electricScootersCategory) {
+      setError('Could not find the "Electric Scooters" category - please refresh and try again.');
+      return;
+    }
+    const categoryIdPayload = productType === "SCOOTER" ? electricScootersCategory!.id : categoryId;
+    if (!categoryIdPayload) {
+      setError("Please select a category.");
+      return;
+    }
+    if (productType === "SCOOTER" && !brandId) {
+      setError("Please select a model.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       const priceInPaise = Math.round(Number(priceRupees) * 100);
       const mrpInPaise = Math.round(Number(mrpRupees) * 100);
       const scooterSpecPayload = productType === "SCOOTER" ? formToScooterSpec(scooterSpec) : undefined;
+      // Model (brandId) only applies to scooters - don't carry over a
+      // leftover selection if the type was switched away from Scooter.
+      const brandIdPayload = productType === "SCOOTER" ? brandId : undefined;
 
       if (mode === "create") {
         const created = await createProduct(accessToken, {
           sku,
           name,
           productType,
-          categoryId,
-          brandId: brandId || undefined,
+          categoryId: categoryIdPayload,
+          brandId: brandIdPayload,
           partNumber: partNumber || undefined,
           description: description || undefined,
           price: priceInPaise,
@@ -257,8 +294,8 @@ export function ProductForm({ mode, product }: Props) {
           sku,
           name,
           productType,
-          categoryId,
-          brandId: brandId || undefined,
+          categoryId: categoryIdPayload,
+          brandId: brandIdPayload,
           partNumber: partNumber || undefined,
           description: description || undefined,
           price: priceInPaise,
@@ -310,48 +347,58 @@ export function ProductForm({ mode, product }: Props) {
         <label className="block">
           <span className="text-sm font-medium text-slate-700">Product type</span>
           <select
+            required
             value={productType}
-            onChange={(e) => setProductType(e.target.value as ProductType)}
+            onChange={(e) => handleProductTypeChange(e.target.value as ProductType | "")}
             className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
           >
+            <option value="" disabled>
+              Select product type
+            </option>
             <option value="SPARE_PART">Spare Part</option>
             <option value="SCOOTER">Electric Scooter</option>
-            <option value="ACCESSORY">Accessory</option>
           </select>
         </label>
 
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Category</span>
-          <select
-            required
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
-          >
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {productType && productType !== "SCOOTER" ? (
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">Category</span>
+            <select
+              required
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
+            >
+              <option value="">Select category</option>
+              {categories
+                .filter((category) => category.slug !== "electric-scooters")
+                .map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+        ) : null}
 
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Brand (optional)</span>
-          <select
-            value={brandId}
-            onChange={(e) => setBrandId(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
-          >
-            <option value="">No brand</option>
-            {brands.map((brand) => (
-              <option key={brand.id} value={brand.id}>
-                {brand.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        {productType === "SCOOTER" ? (
+          <label className="block">
+            <span className="text-sm font-medium text-slate-700">Model</span>
+            <select
+              required
+              value={brandId}
+              onChange={(e) => setBrandId(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm"
+            >
+              <option value="">Select model</option>
+              {brands.map((brand) => (
+                <option key={brand.id} value={brand.id}>
+                  {brand.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
 
         <label className="block">
           <span className="text-sm font-medium text-slate-700">Part number (optional)</span>

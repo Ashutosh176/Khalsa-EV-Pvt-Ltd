@@ -43,14 +43,14 @@ export default function OrdersPage() {
   }, [accessToken]);
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -66,7 +66,7 @@ export default function OrdersPage() {
               ) : orders.length === 0 ? (
                 <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
                   <p className="text-brand-sub">You haven&apos;t placed any orders yet.</p>
-                  <Link href="/products" className="mt-4 inline-block font-semibold text-brand-green-dark">
+                  <Link href="/products" className="mt-4 inline-block font-semibold text-brand-blue-dark">
                     Browse products
                   </Link>
                 </div>

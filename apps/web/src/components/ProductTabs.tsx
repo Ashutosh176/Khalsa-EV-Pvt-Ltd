@@ -15,7 +15,9 @@ export function ProductTabs({ tabs }: { tabs: { label: string; content: ReactNod
             type="button"
             onClick={() => setActive(i)}
             className={`shrink-0 whitespace-nowrap pb-2.5 ${
-              i === active ? "border-b-2 border-brand-green-dark text-brand-green-dark" : ""
+              i === active
+                ? "border-b-2 border-[var(--accent-dark,var(--color-brand-green-dark))] text-[var(--accent-dark,var(--color-brand-green-dark))]"
+                : ""
             }`}
           >
             {tab.label}

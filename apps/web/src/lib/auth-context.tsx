@@ -9,6 +9,7 @@ import {
   logoutCustomer,
   refreshCustomerSession,
   registerCustomer,
+  setAuthEventHandlers,
 } from "./api";
 
 type RegisterInput = { email: string; password: string; name: string; phone: string; phoneVerificationId: string };
@@ -33,6 +34,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CustomerUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Lets api.ts's authFetch silently refresh an expired access token
+    // mid-request (any authenticated call, not just the ones this
+    // provider makes directly) and push the new token back in here,
+    // instead of every call site having to notice a 401 itself.
+    setAuthEventHandlers({
+      onTokenRefreshed: (token) => setAccessToken(token),
+      onSessionExpired: () => {
+        setAccessToken(null);
+        setUser(null);
+      },
+    });
+  }, []);
 
   useEffect(() => {
     refreshCustomerSession()

@@ -7,7 +7,7 @@ const ITEMS: [string, string, string][] = [
 
 export function TrustStrip() {
   return (
-    <div className="flex flex-col gap-6 bg-brand-green-light px-4 py-4 sm:flex-row sm:gap-0 sm:px-7">
+    <div className="flex flex-col gap-6 bg-gradient-to-r from-brand-blue-light to-brand-green-light px-4 py-4 sm:flex-row sm:gap-0 sm:px-7">
       {ITEMS.map(([icon, title, sub]) => (
         <div key={title} className="flex flex-1 items-center gap-2.5">
           <span className="text-xl">{icon}</span>

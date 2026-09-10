@@ -29,7 +29,7 @@ export function AccountNav() {
       {user ? (
         <div className="mb-2 rounded-[10px] border border-brand-line p-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-brand-green-light text-lg">👤</div>
+            <div className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-brand-blue-light text-lg">👤</div>
             <div>
               <b className="text-[12.8px]">{user.name}</b>
               <div className="text-[10.8px] text-brand-sub">{user.email}</div>
@@ -46,7 +46,7 @@ export function AccountNav() {
               key={link.href}
               href={link.href}
               className={`flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[7px] px-3.5 py-2.5 text-[12.5px] transition ${
-                active ? "bg-brand-green-light font-bold text-brand-green-dark" : "text-[#3A3E42] hover:bg-brand-surface"
+                active ? "bg-brand-blue-light font-bold text-brand-blue-dark" : "text-[#3A3E42] hover:bg-brand-surface"
               }`}
             >
               <span>{link.icon}</span>

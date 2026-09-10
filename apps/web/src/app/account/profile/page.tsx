@@ -14,7 +14,7 @@ export default function ProfilePage() {
   const { user, accessToken, loading: authLoading, setUser } = useAuth();
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
@@ -23,7 +23,7 @@ export default function ProfilePage() {
         ) : !user || !accessToken ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to view your account.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
@@ -85,7 +85,7 @@ function ProfileForm({
         </p>
       ) : null}
       {success ? (
-        <p className="rounded-[7px] bg-brand-green-light px-4 py-2.5 text-[12.5px] text-brand-green-dark" role="status">
+        <p className="rounded-[7px] bg-brand-blue-light px-4 py-2.5 text-[12.5px] text-brand-blue-dark" role="status">
           Profile updated.
         </p>
       ) : null}
@@ -96,7 +96,7 @@ function ProfileForm({
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
         />
       </label>
 
@@ -105,7 +105,7 @@ function ProfileForm({
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
         />
       </label>
 
@@ -159,7 +159,7 @@ function PasswordForm({ accessToken }: { accessToken: string }) {
         </p>
       ) : null}
       {success ? (
-        <p className="rounded-[7px] bg-brand-green-light px-4 py-2.5 text-[12.5px] text-brand-green-dark" role="status">
+        <p className="rounded-[7px] bg-brand-blue-light px-4 py-2.5 text-[12.5px] text-brand-blue-dark" role="status">
           Password changed.
         </p>
       ) : null}
@@ -171,7 +171,7 @@ function PasswordForm({ accessToken }: { accessToken: string }) {
           type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
         />
       </label>
 
@@ -183,7 +183,7 @@ function PasswordForm({ accessToken }: { accessToken: string }) {
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-green"
+          className="mt-1.5 w-full rounded-[7px] border border-brand-line px-3.5 py-2.5 text-[13px] outline-none focus:border-brand-blue"
         />
       </label>
 

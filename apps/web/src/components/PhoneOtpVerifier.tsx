@@ -31,10 +31,10 @@ export function PhoneOtpVerifier({
   if (flow.status === "verified" && flow.verificationId) {
     return (
       <div>
-        <span className="text-[11.5px] font-bold">{label}</span>
-        <div className="mt-1 flex items-center justify-between rounded-[7px] border border-brand-green-line bg-brand-green-light px-2.5 py-2 text-xs">
+        <span className="mb-1.5 block text-[12px] font-bold text-brand-ink">{label}</span>
+        <div className="flex items-center justify-between rounded-full border border-brand-blue-line bg-brand-blue-light px-4 py-3 text-[13px]">
           <span>+91 {flow.phone}</span>
-          <span className="font-bold text-brand-green-dark">✓ Verified</span>
+          <span className="font-bold text-brand-blue-dark">✓ Verified</span>
         </div>
         <VerifiedNotifier phone={flow.phone} verificationId={flow.verificationId} onVerified={onVerified} />
       </div>
@@ -43,10 +43,10 @@ export function PhoneOtpVerifier({
 
   return (
     <div>
-      <span className="text-[11.5px] font-bold">{label}</span>
+      <span className="mb-1.5 block text-[12px] font-bold text-brand-ink">{label}</span>
 
-      <div className="mt-1 flex gap-2">
-        <span className="flex items-center rounded-[7px] border border-brand-line bg-brand-surface px-2.5 text-xs text-brand-sub">
+      <div className="flex gap-2">
+        <span className="flex items-center rounded-full border border-brand-line bg-brand-surface px-3.5 text-[13px] text-brand-sub">
           +91
         </span>
         <input
@@ -57,14 +57,14 @@ export function PhoneOtpVerifier({
           disabled={flow.status === "sent" || flow.status === "verifying"}
           onChange={(e) => flow.setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
           placeholder="10-digit mobile number"
-          className="w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green disabled:bg-brand-surface disabled:text-brand-sub"
+          className="w-full rounded-full border border-brand-line px-4 py-3 text-[13px] outline-none focus:border-brand-blue disabled:bg-brand-surface disabled:text-brand-sub"
         />
         {flow.status === "idle" || flow.status === "sending" ? (
           <button
             type="button"
             disabled={!flow.isPhoneValid || flow.status === "sending" || !flow.widgetReady}
             onClick={flow.send}
-            className="shrink-0 rounded-[7px] bg-brand-green-dark px-3 text-xs font-bold text-white disabled:opacity-40"
+            className="shrink-0 rounded-full bg-brand-blue-dark px-4 text-[13px] font-bold text-white disabled:opacity-40"
           >
             {flow.status === "sending" ? "Sending..." : flow.widgetReady ? "Send OTP" : "Loading..."}
           </button>
@@ -72,7 +72,7 @@ export function PhoneOtpVerifier({
           <button
             type="button"
             onClick={flow.reset}
-            className="shrink-0 rounded-[7px] border border-brand-line px-3 text-xs font-semibold text-brand-sub"
+            className="shrink-0 rounded-full border border-brand-line px-4 text-[13px] font-semibold text-brand-sub"
           >
             Change
           </button>
@@ -88,13 +88,13 @@ export function PhoneOtpVerifier({
             value={flow.otp}
             onChange={(e) => flow.setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="Enter OTP"
-            className="w-full rounded-[7px] border border-brand-line px-2.5 py-2 text-xs outline-none focus:border-brand-green"
+            className="w-full rounded-full border border-brand-line px-4 py-3 text-[13px] outline-none focus:border-brand-blue"
           />
           <button
             type="button"
             disabled={flow.otp.length < 4 || flow.status === "verifying"}
             onClick={flow.verify}
-            className="shrink-0 rounded-[7px] bg-brand-green px-3 text-xs font-bold text-white disabled:opacity-40"
+            className="shrink-0 rounded-full bg-brand-blue px-4 text-[13px] font-bold text-white disabled:opacity-40"
           >
             {flow.status === "verifying" ? "Verifying..." : "Verify"}
           </button>
@@ -104,7 +104,7 @@ export function PhoneOtpVerifier({
       {flow.status === "sent" || flow.status === "verifying" ? (
         <div className="mt-1.5 text-[10.5px] text-brand-sub">
           {canResend ? (
-            <button type="button" onClick={flow.resend} className="font-bold text-brand-green-dark">
+            <button type="button" onClick={flow.resend} className="font-bold text-brand-blue-dark">
               Resend OTP
             </button>
           ) : (

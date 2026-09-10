@@ -101,21 +101,21 @@ export default function CheckoutPage() {
   const loading = authLoading || cartLoading || addresses === null;
 
   return (
-    <main className="min-h-screen bg-white text-brand-ink">
+    <main className="theme-scooters min-h-screen bg-white text-brand-ink">
       <Header />
 
       <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-7">
         {!authLoading && !user ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Log in to check out.</p>
-            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/login" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Log in
             </Link>
           </div>
         ) : !cartLoading && activeItems.length === 0 ? (
           <div className="rounded-[10px] border border-dashed border-brand-line p-12 text-center">
             <p className="text-brand-sub">Your cart is empty.</p>
-            <Link href="/products" className="mt-4 inline-block font-semibold text-brand-green-dark">
+            <Link href="/products" className="mt-4 inline-block font-semibold text-brand-blue-dark">
               Browse products
             </Link>
           </div>
@@ -133,7 +133,7 @@ export default function CheckoutPage() {
               {addresses && addresses.length === 0 ? (
                 <div className="mt-3 rounded-[10px] border border-dashed border-brand-line p-6 text-center">
                   <p className="text-[13px] text-brand-sub">You don&apos;t have any saved addresses yet.</p>
-                  <Link href="/account/addresses" className="mt-2 inline-block text-[12.5px] font-semibold text-brand-green-dark">
+                  <Link href="/account/addresses" className="mt-2 inline-block text-[12.5px] font-semibold text-brand-blue-dark">
                     + Add an address
                   </Link>
                 </div>
@@ -143,7 +143,7 @@ export default function CheckoutPage() {
                     <label
                       key={address.id}
                       className={`block cursor-pointer rounded-[10px] border p-3.5 ${
-                        selectedAddressId === address.id ? "border-brand-green" : "border-brand-line"
+                        selectedAddressId === address.id ? "border-brand-blue" : "border-brand-line"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -157,7 +157,7 @@ export default function CheckoutPage() {
                           🏠 <b>{address.fullName}</b>
                         </span>
                         {address.isDefault ? (
-                          <span className="rounded-[4px] bg-brand-green-light px-1.5 py-0.5 text-[9px] font-bold text-brand-green-dark">
+                          <span className="rounded-[4px] bg-brand-blue-light px-1.5 py-0.5 text-[9px] font-bold text-brand-blue-dark">
                             DEFAULT
                           </span>
                         ) : null}
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
                   ))}
                   <Link
                     href="/account/addresses"
-                    className="flex flex-col items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-brand-green-dark p-3.5 text-center text-[13px] font-bold text-brand-green-dark"
+                    className="flex flex-col items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-brand-blue-dark p-3.5 text-center text-[13px] font-bold text-brand-blue-dark"
                   >
                     <span className="text-xl">＋</span>
                     Add New Address
@@ -181,12 +181,12 @@ export default function CheckoutPage() {
               )}
 
               <b className="text-sm">Delivery</b>
-              <div className="mt-3 flex items-center justify-between rounded-[10px] border border-brand-green p-3.5">
+              <div className="mt-3 flex items-center justify-between rounded-[10px] border border-brand-blue p-3.5">
                 <span className="text-[13px]">
                   🚚 <b>Standard Delivery</b>
                   <div className="ml-6 text-[11.5px] text-brand-sub">Delivered in 3 - 5 working days</div>
                 </span>
-                <b className={shippingAmount === 0 ? "text-brand-green-dark" : ""}>
+                <b className={shippingAmount === 0 ? "text-brand-blue-dark" : ""}>
                   {shippingAmount === 0 ? "FREE" : formatIndianRupees(shippingAmount)}
                 </b>
               </div>
@@ -200,7 +200,7 @@ export default function CheckoutPage() {
               <div className="rounded-[10px] border border-brand-line p-4">
                 <div className="flex items-center justify-between">
                   <b className="text-sm">Order Summary</b>
-                  <Link href="/cart" className="text-[11.5px] font-semibold text-brand-green-dark">
+                  <Link href="/cart" className="text-[11.5px] font-semibold text-brand-blue-dark">
                     Edit Cart
                   </Link>
                 </div>
@@ -248,7 +248,7 @@ export default function CheckoutPage() {
                   </div>
                   <div className="flex justify-between text-brand-sub">
                     <span>Shipping</span>
-                    <b className={shippingAmount === 0 ? "text-brand-green-dark" : "text-brand-ink"}>
+                    <b className={shippingAmount === 0 ? "text-brand-blue-dark" : "text-brand-ink"}>
                       {shippingAmount === 0 ? "FREE" : formatIndianRupees(shippingAmount)}
                     </b>
                   </div>
@@ -258,11 +258,11 @@ export default function CheckoutPage() {
                   <span>{formatIndianRupees(subtotal + shippingAmount)}</span>
                 </div>
 
-                <button
+                <button 
                   type="button"
                   onClick={handlePlaceOrder}
                   disabled={placing || !selectedAddressId}
-                  className="mt-4 w-full rounded-[7px] bg-brand-green py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-4 w-full rounded-[7px] bg-brand-blue py-2.5 text-[13px] font-semibold text-white transition hover:bg-brand-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {placing ? "Redirecting to payment..." : "Proceed to Payment"}
                 </button>

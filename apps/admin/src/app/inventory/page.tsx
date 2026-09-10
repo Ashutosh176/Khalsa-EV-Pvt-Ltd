@@ -106,7 +106,9 @@ function InventoryContent() {
   const [brands, setBrands] = useState<Brand[]>([]);
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => undefined);
+    getCategories()
+      .then((all) => setCategories(all.filter((c) => c.slug !== "electric-scooters")))
+      .catch(() => undefined);
     getBrands().then(setBrands).catch(() => undefined);
   }, []);
 
@@ -188,7 +190,7 @@ function InventoryContent() {
                 onChange={(e) => setBrandId(e.target.value)}
                 className="rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] text-brand-sub"
               >
-                <option value="">All Brands</option>
+                <option value="">All Models</option>
                 {brands.map((brand) => (
                   <option key={brand.id} value={brand.id}>
                     {brand.name}

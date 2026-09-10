@@ -28,7 +28,27 @@ export class ApiError extends Error {
   }
 }
 
-async function authFetch<T>(path: string, accessToken: string | null, init?: RequestInit): Promise<T> {
+// The access token lives only in React state (auth-context), so this module
+// has no direct way to push a refreshed token back into it or to react to a
+// refresh failure - these two hooks let auth-context register itself once
+// on mount, without api.ts importing React/context code. Same pattern as
+// apps/web/src/lib/api.ts.
+let onTokenRefreshed: ((accessToken: string) => void) | null = null;
+let onSessionExpired: (() => void) | null = null;
+
+export function setAuthEventHandlers(handlers: { onTokenRefreshed: (accessToken: string) => void; onSessionExpired: () => void }) {
+  onTokenRefreshed = handlers.onTokenRefreshed;
+  onSessionExpired = handlers.onSessionExpired;
+}
+
+// The access token is short-lived (15m) and, unlike apps/web, this app never
+// refreshes it again after the initial page load - so any admin session left
+// open past that window used to fail every request with "Invalid or expired
+// token" instead of silently recovering. On a 401 (and only once, and never
+// for the refresh call itself), exchange the refresh cookie for a new access
+// token and replay the original request - the caller never sees the
+// transient 401 in between.
+async function authFetch<T>(path: string, accessToken: string | null, init?: RequestInit, isRetry = false): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(init?.headers as Record<string, string> | undefined),
@@ -37,6 +57,16 @@ async function authFetch<T>(path: string, accessToken: string | null, init?: Req
 
   const response = await fetch(`${API_URL}${path}`, { ...init, headers, credentials: "include" });
   if (!response.ok) {
+    if (response.status === 401 && !isRetry && path !== "/auth/admin/refresh") {
+      try {
+        const { accessToken: refreshedToken } = await adminRefresh();
+        onTokenRefreshed?.(refreshedToken);
+        return authFetch<T>(path, refreshedToken, init, true);
+      } catch {
+        onSessionExpired?.();
+        throw new ApiError("Your session has expired. Please log in again.", 401);
+      }
+    }
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new ApiError(body?.message ?? `Request to ${path} failed with ${response.status}`, response.status);
   }
