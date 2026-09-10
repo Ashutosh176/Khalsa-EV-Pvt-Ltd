@@ -281,8 +281,21 @@ export function deleteAddress(accessToken: string, id: string) {
 
 // --- Orders ---
 
-export function createOrder(accessToken: string, dto: { shippingAddressId: string; billingAddressId?: string }) {
+export function createOrder(
+  accessToken: string,
+  dto: { shippingAddressId: string; billingAddressId?: string; couponCode?: string },
+) {
   return authFetch<OrderView>("/orders", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+// Preview only - order creation re-validates the code server-side against
+// the authoritative subtotal, so this is just what lets the checkout page
+// show a discount before the customer commits to placing the order.
+export function validateCoupon(accessToken: string, code: string) {
+  return authFetch<{ code: string; discountAmount: number }>("/coupons/validate", accessToken, {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
 }
 
 export function getOrders(accessToken: string) {

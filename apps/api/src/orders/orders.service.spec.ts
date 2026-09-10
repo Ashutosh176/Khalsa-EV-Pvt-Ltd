@@ -7,6 +7,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import type { ShippingService } from "../shipping/shipping.service";
 import type { NotificationsService } from "../notifications/notifications.service";
 import type { PaymentsService } from "../payments/payments.service";
+import type { CouponsService } from "../coupons/coupons.service";
 import { FLAT_SHIPPING_FEE_PAISE, FREE_SHIPPING_THRESHOLD_PAISE } from "../common/constants";
 
 type Row = { id: string; [key: string]: unknown };
@@ -49,6 +50,7 @@ describe("OrdersService", () => {
   let shippingService: { syncStatus: AsyncMock<void> };
   let notificationsService: { create: AsyncMock<Row> };
   let paymentsService: Record<string, never>;
+  let couponsService: { applyToOrder: AsyncMock<Row> };
 
   beforeEach(() => {
     executeRawResult = 1; // reservation succeeds by default
@@ -87,12 +89,14 @@ describe("OrdersService", () => {
     shippingService = { syncStatus: jest.fn<AsyncFn<void>>().mockResolvedValue(undefined) };
     notificationsService = { create: jest.fn<AsyncFn<Row>>().mockResolvedValue({ id: "notif-1" }) };
     paymentsService = {};
+    couponsService = { applyToOrder: jest.fn<AsyncFn<Row>>() };
 
     service = new OrdersService(
       prisma as unknown as PrismaService,
       shippingService as unknown as ShippingService,
       notificationsService as unknown as NotificationsService,
       paymentsService as unknown as PaymentsService,
+      couponsService as unknown as CouponsService,
     );
   });
 
@@ -139,6 +143,41 @@ describe("OrdersService", () => {
           }),
         }),
       );
+    });
+
+    it("applies a coupon's discount to the order total when couponCode is given", async () => {
+      prisma.cart.findUnique.mockResolvedValue({
+        id: "cart-1",
+        items: [cartItemRow({ quantity: 2 })], // subtotal 200000
+      });
+      couponsService.applyToOrder.mockResolvedValue({ couponId: "coupon-1", discountAmount: 20000 });
+
+      await service.createFromCart("user-1", { shippingAddressId: "addr-1", couponCode: "SAVE10" });
+
+      expect(couponsService.applyToOrder).toHaveBeenCalledWith(tx, "SAVE10", 200000);
+      expect(tx.order.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            discountAmount: 20000,
+            couponId: "coupon-1",
+            totalAmount: 200000 - 20000 + FLAT_SHIPPING_FEE_PAISE,
+          }),
+        }),
+      );
+    });
+
+    it("never calls the coupon service when no couponCode is given", async () => {
+      await service.createFromCart("user-1", { shippingAddressId: "addr-1" });
+      expect(couponsService.applyToOrder).not.toHaveBeenCalled();
+    });
+
+    it("propagates a coupon rejection instead of placing the order", async () => {
+      couponsService.applyToOrder.mockRejectedValue(new BadRequestException("Invalid coupon code"));
+
+      await expect(
+        service.createFromCart("user-1", { shippingAddressId: "addr-1", couponCode: "BOGUS" }),
+      ).rejects.toThrow(BadRequestException);
+      expect(tx.order.create).not.toHaveBeenCalled();
     });
 
     it("waives shipping at/above the free-shipping threshold", async () => {

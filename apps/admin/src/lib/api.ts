@@ -1,6 +1,7 @@
 import type {
   AdminBrand,
   AdminCategory,
+  AdminCoupon,
   AdminInventoryItem,
   AdminOrderDetail,
   AdminOrderListItem,
@@ -12,12 +13,14 @@ import type {
   CompatibilityEntry,
   CreateBrandInput,
   CreateCategoryInput,
+  CreateCouponInput,
   CreateProductInput,
   OrderStatus,
   PaginatedResult,
   ReturnStatus,
   UpdateBrandInput,
   UpdateCategoryInput,
+  UpdateCouponInput,
   UpdateProductInput,
   UpdateShipmentInput,
   VehicleBrand,
@@ -216,6 +219,24 @@ export function updateBrand(accessToken: string, id: string, dto: UpdateBrandInp
 
 export function archiveBrand(accessToken: string, id: string) {
   return authFetch<AdminBrand>(`/brands/${id}`, accessToken, { method: "DELETE" });
+}
+
+// --- Coupons ---
+
+export function getAdminCoupons(accessToken: string) {
+  return authFetch<AdminCoupon[]>("/coupons", accessToken);
+}
+
+export function createCoupon(accessToken: string, dto: CreateCouponInput) {
+  return authFetch<AdminCoupon>("/coupons", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateCoupon(accessToken: string, id: string, dto: UpdateCouponInput) {
+  return authFetch<AdminCoupon>(`/coupons/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function archiveCoupon(accessToken: string, id: string) {
+  return authFetch<AdminCoupon>(`/coupons/${id}`, accessToken, { method: "DELETE" });
 }
 
 // --- Orders ---

@@ -7,4 +7,8 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   billingAddressId?: string;
+
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
 }

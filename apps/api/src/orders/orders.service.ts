@@ -7,6 +7,7 @@ import { ShippingService } from "../shipping/shipping.service";
 import type { UpdateShipmentDto } from "../shipping/dto/update-shipment.dto";
 import { NotificationsService } from "../notifications/notifications.service";
 import { PaymentsService } from "../payments/payments.service";
+import { CouponsService } from "../coupons/coupons.service";
 import {
   ALLOWED_ORDER_TRANSITIONS,
   notificationTypeForOrderStatus,
@@ -47,6 +48,7 @@ export class OrdersService {
     private readonly shippingService: ShippingService,
     private readonly notificationsService: NotificationsService,
     private readonly paymentsService: PaymentsService,
+    private readonly couponsService: CouponsService,
   ) {}
 
   async createFromCart(userId: string, dto: CreateOrderDto) {
@@ -89,11 +91,17 @@ export class OrdersService {
 
     const subtotal = lineItems.reduce((sum, li) => sum + li.lineTotal, 0);
     const taxAmount = lineItems.reduce((sum, li) => sum + li.taxPortion, 0);
-    const discountAmount = 0; // no coupon system wired up yet
     const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD_PAISE ? 0 : FLAT_SHIPPING_FEE_PAISE;
-    const totalAmount = subtotal - discountAmount + shippingAmount;
 
     const orderId = await this.prisma.$transaction(async (tx) => {
+      // Applied (and its usage claimed) inside the transaction, against
+      // this authoritative subtotal - not the client's - so a coupon
+      // preview shown earlier on the cart page never gets blindly trusted
+      // here (Section 11's "never trust client-calculated totals").
+      const coupon = dto.couponCode ? await this.couponsService.applyToOrder(tx, dto.couponCode, subtotal) : null;
+      const discountAmount = coupon?.discountAmount ?? 0;
+      const totalAmount = subtotal - discountAmount + shippingAmount;
+
       const order = await tx.order.create({
         data: {
           orderNumber: generateOrderNumber(),
@@ -103,6 +111,7 @@ export class OrdersService {
           shippingAmount,
           taxAmount,
           totalAmount,
+          couponId: coupon?.couponId,
           shippingAddressId: shippingAddress.id,
           billingAddressId: billingAddress.id,
         },

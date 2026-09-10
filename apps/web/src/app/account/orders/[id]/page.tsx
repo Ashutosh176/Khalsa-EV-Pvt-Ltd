@@ -237,6 +237,12 @@ export default function OrderDetailPage() {
                         <span>Subtotal</span>
                         <span>{formatIndianRupees(order.subtotal)}</span>
                       </div>
+                      {order.discountAmount > 0 ? (
+                        <div className="flex justify-between text-brand-sub">
+                          <span>Coupon discount</span>
+                          <span>-{formatIndianRupees(order.discountAmount)}</span>
+                        </div>
+                      ) : null}
                       <div className="flex justify-between text-brand-sub">
                         <span>Shipping</span>
                         <span>{order.shippingAmount === 0 ? "Free" : formatIndianRupees(order.shippingAmount)}</span>

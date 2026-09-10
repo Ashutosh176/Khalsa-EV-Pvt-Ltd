@@ -9,7 +9,7 @@ import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { useAuth } from "../../lib/auth-context";
 import { useCart } from "../../lib/cart-context";
-import { getAddresses, createOrder } from "../../lib/api";
+import { getAddresses, createOrder, validateCoupon } from "../../lib/api";
 import { useRazorpayCheckout } from "../../lib/useRazorpayCheckout";
 
 const FREE_SHIPPING_THRESHOLD_PAISE = 299900;
@@ -39,6 +39,11 @@ export default function CheckoutPage() {
   const [errorItemId, setErrorItemId] = useState<string | null>(null);
   const [removingItemId, setRemovingItemId] = useState<string | null>(null);
 
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
   useEffect(() => {
     if (!accessToken) return;
     let cancelled = false;
@@ -60,6 +65,28 @@ export default function CheckoutPage() {
   const activeItems = cart?.items.filter((item) => !item.savedForLater) ?? [];
   const subtotal = cart?.subtotal ?? 0;
   const shippingAmount = subtotal >= FREE_SHIPPING_THRESHOLD_PAISE || activeItems.length === 0 ? 0 : FLAT_SHIPPING_FEE_PAISE;
+  const discountAmount = appliedCoupon?.discountAmount ?? 0;
+
+  async function handleApplyCoupon() {
+    if (!accessToken || !couponInput.trim()) return;
+    setCouponError(null);
+    setApplyingCoupon(true);
+    try {
+      const result = await validateCoupon(accessToken, couponInput.trim());
+      setAppliedCoupon(result);
+    } catch (err) {
+      setAppliedCoupon(null);
+      setCouponError(err instanceof Error ? err.message : "Could not apply coupon");
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  }
 
   async function handlePlaceOrder() {
     if (!accessToken || !selectedAddressId) return;
@@ -67,7 +94,10 @@ export default function CheckoutPage() {
     setErrorItemId(null);
     setPlacing(true);
     try {
-      const order = await createOrder(accessToken, { shippingAddressId: selectedAddressId });
+      const order = await createOrder(accessToken, {
+        shippingAddressId: selectedAddressId,
+        couponCode: appliedCoupon?.code,
+      });
       await payForOrder(
         accessToken,
         order,
@@ -241,11 +271,47 @@ export default function CheckoutPage() {
                     );
                   })}
                 </div>
+                <div className="mt-3.5 border-t border-brand-line pt-3.5">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between rounded-[7px] bg-brand-blue-light px-3 py-2 text-[11.5px]">
+                      <span className="font-semibold text-brand-blue-dark">🎟️ {appliedCoupon.code} applied</span>
+                      <button type="button" onClick={handleRemoveCoupon} className="font-semibold text-brand-red underline">
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        placeholder="Enter coupon code"
+                        className="flex-1 rounded-[7px] border border-brand-line px-3 py-2 text-[12.5px] outline-none focus:border-brand-blue"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={applyingCoupon || !couponInput.trim()}
+                        className="rounded-[7px] border border-brand-blue-dark px-3.5 py-2 text-[12.5px] font-semibold text-brand-blue-dark disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {applyingCoupon ? "Applying..." : "Apply"}
+                      </button>
+                    </div>
+                  )}
+                  {couponError ? <p className="mt-1.5 text-[11.5px] text-brand-red">{couponError}</p> : null}
+                </div>
+
                 <div className="mt-3 space-y-1.5 border-t border-brand-line pt-3 text-xs">
                   <div className="flex justify-between text-brand-sub">
                     <span>Subtotal ({activeItems.length} items)</span>
                     <b className="text-brand-ink">{formatIndianRupees(subtotal)}</b>
                   </div>
+                  {appliedCoupon ? (
+                    <div className="flex justify-between text-brand-sub">
+                      <span>Coupon discount</span>
+                      <b className="text-brand-blue-dark">-{formatIndianRupees(discountAmount)}</b>
+                    </div>
+                  ) : null}
                   <div className="flex justify-between text-brand-sub">
                     <span>Shipping</span>
                     <b className={shippingAmount === 0 ? "text-brand-blue-dark" : "text-brand-ink"}>
@@ -255,7 +321,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between border-t border-brand-line pt-2.5 text-[15px] font-extrabold">
                   <span>Total Amount</span>
-                  <span>{formatIndianRupees(subtotal + shippingAmount)}</span>
+                  <span>{formatIndianRupees(subtotal - discountAmount + shippingAmount)}</span>
                 </div>
 
                 <button 

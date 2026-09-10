@@ -150,6 +150,12 @@ function OrderDetailContent({ id }: { id: string }) {
                   <span>Subtotal</span>
                   <span>{formatIndianRupees(order.subtotal)}</span>
                 </div>
+                {order.discountAmount > 0 ? (
+                  <div className="flex justify-between text-brand-sub">
+                    <span>Coupon discount</span>
+                    <span>-{formatIndianRupees(order.discountAmount)}</span>
+                  </div>
+                ) : null}
                 <div className="flex justify-between text-brand-sub">
                   <span>Shipping</span>
                   <span>{formatIndianRupees(order.shippingAmount)}</span>

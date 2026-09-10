@@ -41,6 +41,34 @@ export type UpdateCategoryInput = Partial<CreateCategoryInput> & { isActive?: bo
 export type CreateBrandInput = { name: string; slug?: string; logoUrl?: string; description?: string };
 export type UpdateBrandInput = Partial<CreateBrandInput> & { isActive?: boolean };
 
+export type CouponType = "PERCENTAGE" | "FLAT";
+
+export type AdminCoupon = {
+  id: string;
+  code: string;
+  type: CouponType;
+  value: number;
+  minOrderAmount: number;
+  maxDiscountAmount: number | null;
+  usageLimit: number | null;
+  usedCount: number;
+  startsAt: string | null;
+  endsAt: string | null;
+  isActive: boolean;
+};
+
+export type CreateCouponInput = {
+  code: string;
+  type: CouponType;
+  value: number;
+  minOrderAmount?: number;
+  maxDiscountAmount?: number;
+  usageLimit?: number;
+  startsAt?: string;
+  endsAt?: string;
+};
+export type UpdateCouponInput = Partial<CreateCouponInput> & { isActive?: boolean };
+
 export type ProductImage = { id: string; url: string; sortOrder: number };
 export type InventoryRow = {
   id: string;
