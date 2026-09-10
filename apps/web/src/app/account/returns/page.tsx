@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { formatIndianRupees } from "@khalsa-ev/utils";
 import { Button } from "@khalsa-ev/ui";
 import type { OrderView, ReturnView } from "@khalsa-ev/types";
 import { Header } from "../../../components/Header";
@@ -191,9 +192,17 @@ function ReturnsPageInner() {
                         <div>
                           <p className="font-bold">{r.order.orderNumber}</p>
                           <p className="text-xs text-brand-sub">{r.reason}</p>
+                          {r.status === "REJECTED" && r.adminNote ? (
+                            <p className="mt-1 text-xs text-brand-red">{r.adminNote}</p>
+                          ) : r.refund ? (
+                            <p className="mt-1 text-xs text-brand-sub">
+                              Refund of {formatIndianRupees(r.refund.amount)}{" "}
+                              {r.refund.status === "COMPLETED" ? "credited to your original payment method" : "in progress"}
+                            </p>
+                          ) : null}
                         </div>
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-[10.5px] font-bold uppercase tracking-wide text-slate-600">
-                          {r.status}
+                          {r.status.replace(/_/g, " ")}
                         </span>
                       </div>
                     ))}
