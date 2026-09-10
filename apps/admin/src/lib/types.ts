@@ -57,6 +57,17 @@ export type AdminCoupon = {
   isActive: boolean;
 };
 
+export type AdminReview = {
+  id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  isApproved: boolean;
+  createdAt: string;
+  user: { id: string; name: string; email: string };
+  product: { id: string; name: string; slug: string };
+};
+
 export type CreateCouponInput = {
   code: string;
   type: CouponType;

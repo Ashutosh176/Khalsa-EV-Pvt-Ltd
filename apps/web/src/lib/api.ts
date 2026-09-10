@@ -7,10 +7,13 @@ import type {
   CatalogProductDetail,
   Category,
   CreateReturnInput,
+  CreateReviewInput,
   CustomerUser,
+  MyReviewView,
   NotificationView,
   OrderView,
   PaginatedResult,
+  ProductReviewsSummary,
   ReturnView,
   VehicleBrand,
   VehicleModel,
@@ -136,6 +139,12 @@ export function getCatalogProduct(slug: string) {
 
 export function getCategories() {
   return apiFetch<Category[]>("/categories");
+}
+
+// Public - approved reviews only. Runs fine in a Server Component (product
+// detail pages fetch this alongside the product itself).
+export function getProductReviews(productId: string) {
+  return apiFetch<ProductReviewsSummary>(`/reviews?productId=${encodeURIComponent(productId)}`);
 }
 
 export function getBrands(filters: { productType?: "SPARE_PART" | "SCOOTER" | "ACCESSORY" } = {}) {
@@ -340,6 +349,16 @@ export function getReturns(accessToken: string) {
 
 export function createReturn(accessToken: string, dto: CreateReturnInput) {
   return authFetch<ReturnView>("/returns", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+// --- Reviews ---
+
+export function createReview(accessToken: string, dto: CreateReviewInput) {
+  return authFetch<MyReviewView>("/reviews", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function getMyReviews(accessToken: string) {
+  return authFetch<MyReviewView[]>("/reviews/mine", accessToken);
 }
 
 // --- Notifications ---

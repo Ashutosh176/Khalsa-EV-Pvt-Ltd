@@ -9,7 +9,8 @@ import { ProductCardActions } from "../../../../components/ProductCardActions";
 import { ProductGallery } from "../../../../components/ProductGallery";
 import { ProductBuyBox } from "../../../../components/ProductBuyBox";
 import { ProductTabs } from "../../../../components/ProductTabs";
-import { getCatalogProduct, getCatalogProducts } from "../../../../lib/api";
+import { ProductReviews } from "../../../../components/ProductReviews";
+import { getCatalogProduct, getCatalogProducts, getProductReviews } from "../../../../lib/api";
 
 // Scooters live at /products/[slug] instead (Section 60) - even though
 // they're rows in the same Product table, a scooter slug must 404 here
@@ -45,6 +46,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const related = (
     await getCatalogProducts({ productType: "SPARE_PART", categoryId: product.category.id, pageSize: 5 })
   ).items.filter((p) => p.id !== product.id);
+
+  const reviews = await getProductReviews(product.id);
 
   const rawTabs: ({ label: string; content: ReactNode } | null)[] = [
     specEntries.length > 0
@@ -92,6 +95,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           ),
         }
       : null,
+    { label: `Reviews (${reviews.totalCount})`, content: <ProductReviews productId={product.id} initial={reviews} /> },
   ];
   const tabs = rawTabs.filter((tab): tab is { label: string; content: ReactNode } => tab !== null);
 
@@ -125,6 +129,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             SKU: {product.sku}
             {product.partNumber ? ` · Part #${product.partNumber}` : ""}
           </p>
+
+          {reviews.totalCount > 0 ? (
+            <p className="mt-1.5 text-[12px] text-brand-sub">
+              <span className="text-amber-500">★</span> {reviews.averageRating.toFixed(1)} ({reviews.totalCount}{" "}
+              {reviews.totalCount === 1 ? "review" : "reviews"})
+            </p>
+          ) : null}
 
           <div className="mt-3.5 flex items-baseline gap-2.5">
             <span className="text-[26px] font-extrabold">{formatIndianRupees(product.price)}</span>

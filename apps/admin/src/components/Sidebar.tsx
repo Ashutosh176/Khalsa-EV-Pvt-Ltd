@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/coupons", icon: "🎟️", label: "Coupons" },
   { href: "/orders", icon: "🧾", label: "Orders" },
   { href: "/returns", icon: "↩️", label: "Returns" },
+  { href: "/reviews", icon: "⭐", label: "Reviews" },
   { href: "/inventory", icon: "🗄️", label: "Inventory" },
   { href: "/vehicles", icon: "🚗", label: "Vehicles" },
 ];

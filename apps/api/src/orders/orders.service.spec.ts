@@ -50,7 +50,7 @@ describe("OrdersService", () => {
   let shippingService: { syncStatus: AsyncMock<void> };
   let notificationsService: { create: AsyncMock<Row> };
   let paymentsService: Record<string, never>;
-  let couponsService: { applyToOrder: AsyncMock<Row> };
+  let couponsService: { applyToOrder: AsyncMock<{ couponId: string; discountAmount: number }> };
 
   beforeEach(() => {
     executeRawResult = 1; // reservation succeeds by default
@@ -89,7 +89,7 @@ describe("OrdersService", () => {
     shippingService = { syncStatus: jest.fn<AsyncFn<void>>().mockResolvedValue(undefined) };
     notificationsService = { create: jest.fn<AsyncFn<Row>>().mockResolvedValue({ id: "notif-1" }) };
     paymentsService = {};
-    couponsService = { applyToOrder: jest.fn<AsyncFn<Row>>() };
+    couponsService = { applyToOrder: jest.fn<AsyncFn<{ couponId: string; discountAmount: number }>>() };
 
     service = new OrdersService(
       prisma as unknown as PrismaService,

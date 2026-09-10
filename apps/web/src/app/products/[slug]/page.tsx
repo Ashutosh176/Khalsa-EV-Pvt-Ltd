@@ -9,7 +9,8 @@ import { ProductCardActions } from "../../../components/ProductCardActions";
 import { ProductGallery } from "../../../components/ProductGallery";
 import { ProductBuyBox } from "../../../components/ProductBuyBox";
 import { ProductTabs } from "../../../components/ProductTabs";
-import { getCatalogProduct, getCatalogProducts } from "../../../lib/api";
+import { ProductReviews } from "../../../components/ProductReviews";
+import { getCatalogProduct, getCatalogProducts, getProductReviews } from "../../../lib/api";
 
 // Spare parts live at /spare-parts/products/[slug] instead (Section 60) - a
 // spare part's slug must 404 here rather than render through the scooter
@@ -69,6 +70,8 @@ export default async function ScooterDetailPage({ params }: { params: Promise<{ 
     await getCatalogProducts({ productType: "SCOOTER", brandId: scooter.brand?.id, pageSize: 5 })
   ).items.filter((p) => p.id !== scooter.id);
 
+  const reviews = await getProductReviews(scooter.id);
+
   const tabs: { label: string; content: ReactNode }[] = [
     ...(specRows.length > 0
       ? [
@@ -98,6 +101,7 @@ export default async function ScooterDetailPage({ params }: { params: Promise<{ 
           },
         ]
       : []),
+    { label: `Reviews (${reviews.totalCount})`, content: <ProductReviews productId={scooter.id} initial={reviews} /> },
   ];
 
   return (
@@ -126,6 +130,13 @@ export default async function ScooterDetailPage({ params }: { params: Promise<{ 
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-brand-blue">{scooter.brand.name}</p>
           ) : null}
           <h1 className="mt-1.5 text-[21px] font-bold">{scooter.name}</h1>
+
+          {reviews.totalCount > 0 ? (
+            <p className="mt-1.5 text-[12px] text-brand-sub">
+              <span className="text-amber-500">★</span> {reviews.averageRating.toFixed(1)} ({reviews.totalCount}{" "}
+              {reviews.totalCount === 1 ? "review" : "reviews"})
+            </p>
+          ) : null}
 
           <div className="mt-3.5 flex items-baseline gap-2.5">
             <span className="text-[26px] font-extrabold">{formatIndianRupees(scooter.price)}</span>

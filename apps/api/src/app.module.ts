@@ -13,6 +13,7 @@ import { WishlistModule } from "./wishlist/wishlist.module";
 import { AddressesModule } from "./addresses/addresses.module";
 import { OrdersModule } from "./orders/orders.module";
 import { CouponsModule } from "./coupons/coupons.module";
+import { ReviewsModule } from "./reviews/reviews.module";
 import { InventoryModule } from "./inventory/inventory.module";
 import { ReturnsModule } from "./returns/returns.module";
 import { ShippingModule } from "./shipping/shipping.module";
@@ -34,6 +35,7 @@ import { PaymentsModule } from "./payments/payments.module";
     AddressesModule,
     OrdersModule,
     CouponsModule,
+    ReviewsModule,
     InventoryModule,
     ReturnsModule,
     ShippingModule,

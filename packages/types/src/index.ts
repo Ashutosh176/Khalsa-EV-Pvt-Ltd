@@ -301,6 +301,39 @@ export type CreateReturnInput = {
   reason: string;
 };
 
+export type ReviewView = {
+  id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  createdAt: string;
+  user: { name: string };
+};
+
+export type ProductReviewsSummary = {
+  items: ReviewView[];
+  averageRating: number;
+  totalCount: number;
+};
+
+export type MyReviewView = {
+  id: string;
+  productId: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  isApproved: boolean;
+  createdAt: string;
+  product: { id: string; name: string; slug: string };
+};
+
+export type CreateReviewInput = {
+  productId: string;
+  rating: number;
+  title?: string;
+  comment?: string;
+};
+
 export type NotificationTypeValue = "ORDER" | "PAYMENT" | "SHIPMENT" | "RETURN" | "SYSTEM";
 
 export type NotificationView = {

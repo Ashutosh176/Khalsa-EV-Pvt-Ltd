@@ -7,6 +7,7 @@ import type {
   AdminOrderListItem,
   AdminProduct,
   AdminReturnListItem,
+  AdminReview,
   AdminUser,
   Brand,
   Category,
@@ -237,6 +238,22 @@ export function updateCoupon(accessToken: string, id: string, dto: UpdateCouponI
 
 export function archiveCoupon(accessToken: string, id: string) {
   return authFetch<AdminCoupon>(`/coupons/${id}`, accessToken, { method: "DELETE" });
+}
+
+// --- Reviews ---
+
+export type ReviewFilters = { isApproved?: boolean; page?: number; pageSize?: number };
+
+export function getAdminReviews(accessToken: string, filters: ReviewFilters = {}) {
+  return authFetch<PaginatedResult<AdminReview>>(`/admin/reviews${toQueryString(filters)}`, accessToken);
+}
+
+export function approveReview(accessToken: string, id: string) {
+  return authFetch<AdminReview>(`/admin/reviews/${id}/approve`, accessToken, { method: "PATCH" });
+}
+
+export function deleteReview(accessToken: string, id: string) {
+  return authFetch<AdminReview>(`/admin/reviews/${id}`, accessToken, { method: "DELETE" });
 }
 
 // --- Orders ---
