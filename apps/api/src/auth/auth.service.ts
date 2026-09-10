@@ -16,7 +16,7 @@ export const REFRESH_TOKEN_TTL = "7d";
 export const ADMIN_REFRESH_COOKIE_NAME = "khalsa_admin_refresh";
 export const CUSTOMER_REFRESH_COOKIE_NAME = "khalsa_customer_refresh";
 
-const PASSWORD_HASH_ROUNDS = 12;
+export const PASSWORD_HASH_ROUNDS = 12;
 
 @Injectable()
 export class AuthService {

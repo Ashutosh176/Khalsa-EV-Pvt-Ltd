@@ -10,6 +10,20 @@ export type AdminUser = {
   role: Role;
 };
 
+// The admin user *management* list (SUPER_ADMIN only) - a superset of
+// AdminUser (isActive, createdAt) for accounts other than "me".
+export type AdminUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type CreateAdminUserInput = { email: string; password: string; name: string; role: Role };
+export type UpdateAdminUserInput = { name?: string; role?: Role; isActive?: boolean };
+
 export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
 export type ProductType = "SPARE_PART" | "SCOOTER" | "ACCESSORY";
 

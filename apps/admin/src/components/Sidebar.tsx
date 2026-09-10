@@ -21,11 +21,16 @@ const NAV_ITEMS = [
   { href: "/reviews", icon: "⭐", label: "Reviews" },
   { href: "/inventory", icon: "🗄️", label: "Inventory" },
   { href: "/vehicles", icon: "🚗", label: "Vehicles" },
+  { href: "/admin-users", icon: "🛡️", label: "Admin Users", superAdminOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  // Hiding the link is UX politeness, not the security boundary - the
+  // backend's own @Roles(SUPER_ADMIN) guard on /admin/users is what
+  // actually enforces this (Section 21).
+  const visibleNavItems = NAV_ITEMS.filter((item) => !item.superAdminOnly || user?.role === "SUPER_ADMIN");
 
   return (
     <aside className="flex h-screen w-[230px] flex-shrink-0 flex-col bg-brand-charcoal py-4 text-[#B7BBBE]">
@@ -38,7 +43,7 @@ export function Sidebar() {
 
       <div className="px-2.5 pt-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#6E7478]">Main</div>
       <nav className="flex-1 px-2">
-        {NAV_ITEMS.map((item) => {
+        {visibleNavItems.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
             <div key={item.href}>

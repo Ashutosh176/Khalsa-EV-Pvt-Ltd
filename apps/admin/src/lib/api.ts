@@ -10,9 +10,11 @@ import type {
   AdminReturnListItem,
   AdminReview,
   AdminUser,
+  AdminUserRow,
   Brand,
   Category,
   CompatibilityEntry,
+  CreateAdminUserInput,
   CreateBrandInput,
   CreateCategoryInput,
   CreateCouponInput,
@@ -21,6 +23,7 @@ import type {
   OrderStatus,
   PaginatedResult,
   ReturnStatus,
+  UpdateAdminUserInput,
   UpdateBrandInput,
   UpdateCategoryInput,
   UpdateCouponInput,
@@ -119,6 +122,20 @@ export function adminLogout() {
 
 export function getAdminMe(accessToken: string) {
   return authFetch<AdminUser>("/auth/admin/me", accessToken);
+}
+
+// --- Admin user management (SUPER_ADMIN only) ---
+
+export function getAdminUsers(accessToken: string) {
+  return authFetch<AdminUserRow[]>("/admin/users", accessToken);
+}
+
+export function createAdminUser(accessToken: string, dto: CreateAdminUserInput) {
+  return authFetch<AdminUserRow>("/admin/users", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateAdminUser(accessToken: string, id: string, dto: UpdateAdminUserInput) {
+  return authFetch<AdminUserRow>(`/admin/users/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
 }
 
 // --- Products ---
