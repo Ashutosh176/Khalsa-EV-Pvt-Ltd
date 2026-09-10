@@ -3,6 +3,7 @@ import type {
   AdminOrderDetail,
   AdminOrderListItem,
   AdminProduct,
+  AdminReturnListItem,
   AdminUser,
   Brand,
   Category,
@@ -10,6 +11,7 @@ import type {
   CreateProductInput,
   OrderStatus,
   PaginatedResult,
+  ReturnStatus,
   UpdateProductInput,
   UpdateShipmentInput,
   VehicleBrand,
@@ -199,6 +201,25 @@ export function updateOrderShipment(accessToken: string, id: string, dto: Update
   return authFetch<AdminOrderDetail>(`/admin/orders/${id}/shipment`, accessToken, {
     method: "PATCH",
     body: JSON.stringify(dto),
+  });
+}
+
+// --- Returns ---
+
+export type ReturnFilters = { status?: string; search?: string; page?: number; pageSize?: number };
+
+export function getAdminReturns(accessToken: string, filters: ReturnFilters = {}) {
+  return authFetch<PaginatedResult<AdminReturnListItem>>(`/admin/returns${toQueryString(filters)}`, accessToken);
+}
+
+export function getAdminReturn(accessToken: string, id: string) {
+  return authFetch<AdminReturnListItem>(`/admin/returns/${id}`, accessToken);
+}
+
+export function updateReturnStatus(accessToken: string, id: string, status: ReturnStatus, adminNote?: string) {
+  return authFetch<AdminReturnListItem>(`/admin/returns/${id}/status`, accessToken, {
+    method: "PATCH",
+    body: JSON.stringify({ status, adminNote }),
   });
 }
 

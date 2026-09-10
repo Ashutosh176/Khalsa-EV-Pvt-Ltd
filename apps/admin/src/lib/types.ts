@@ -186,6 +186,28 @@ export type AdminInventoryItem = {
   warehouse: { id: string; name: string; code: string };
 };
 
+export type ReturnStatus = "REQUESTED" | "APPROVED" | "REJECTED" | "PICKED_UP" | "RECEIVED" | "COMPLETED";
+export type RefundStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+export type RefundInfo = {
+  id: string;
+  amount: number;
+  status: RefundStatus;
+  razorpayRefundId: string | null;
+  processedAt: string | null;
+};
+
+export type AdminReturnListItem = {
+  id: string;
+  reason: string;
+  status: ReturnStatus;
+  adminNote: string | null;
+  createdAt: string;
+  order: { id: string; orderNumber: string };
+  user: { id: string; name: string; email: string };
+  refund: RefundInfo | null;
+};
+
 export type VehicleBrand = { id: string; name: string; slug: string };
 export type VehicleModel = { id: string; vehicleBrandId: string; name: string; slug: string };
 export type VehicleVariant = { id: string; vehicleModelId: string; name: string };
