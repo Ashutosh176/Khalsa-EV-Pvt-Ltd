@@ -334,6 +334,13 @@ export type CreateReviewInput = {
   comment?: string;
 };
 
+export type OfferView = {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+};
+
 export type NotificationTypeValue = "ORDER" | "PAYMENT" | "SHIPMENT" | "RETURN" | "SYSTEM";
 
 export type NotificationView = {

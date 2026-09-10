@@ -11,6 +11,7 @@ import type {
   CustomerUser,
   MyReviewView,
   NotificationView,
+  OfferView,
   OrderView,
   PaginatedResult,
   ProductReviewsSummary,
@@ -139,6 +140,12 @@ export function getCatalogProduct(slug: string) {
 
 export function getCategories() {
   return apiFetch<Category[]>("/categories");
+}
+
+// Public - already filtered to isActive and within its startsAt/endsAt
+// window (see OffersService.findAllActive).
+export function getOffers() {
+  return apiFetch<OfferView[]>("/offers");
 }
 
 // Public - approved reviews only. Runs fine in a Server Component (product

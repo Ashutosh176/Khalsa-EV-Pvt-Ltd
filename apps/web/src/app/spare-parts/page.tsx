@@ -4,9 +4,10 @@ import { Button, CatalogProductCard } from "@khalsa-ev/ui";
 import { Header } from "../../components/Header";
 import { Footer } from "../../components/Footer";
 import { TrustStrip } from "../../components/TrustStrip";
+import { OffersStrip } from "../../components/OffersStrip";
 import { ProductCardActions } from "../../components/ProductCardActions";
 import { categoryIcon } from "../../components/CategoryIcon";
-import { getBrands, getCatalogProducts, getCategories } from "../../lib/api";
+import { getBrands, getCatalogProducts, getCategories, getOffers } from "../../lib/api";
 
 // Categories, brands, and featured products are fetched server-side from
 // the API - without this, Next would freeze the homepage as fully static
@@ -25,10 +26,11 @@ const WHY_CHOOSE_US = [
 ];
 
 export default async function HomePage() {
-  const [allCategories, brands, featuredResult] = await Promise.all([
+  const [allCategories, brands, featuredResult, offers] = await Promise.all([
     getCategories(),
     getBrands({ productType: "SPARE_PART" }),
     getCatalogProducts({ productType: "SPARE_PART", featured: true, pageSize: 6 }),
+    getOffers(),
   ]);
   // "Electric Scooters" is a real Category row (every Scooter product needs
   // one), but it belongs to the Scooters section's own Model list now, not
@@ -95,6 +97,8 @@ export default async function HomePage() {
       <div className="border-b border-brand-line">
         <TrustStrip />
       </div>
+
+      <OffersStrip offers={offers} />
 
       <div className="px-4 pb-2.5 pt-7 sm:px-7">
         <div className="flex flex-wrap items-center gap-3.5 rounded-[10px] border border-brand-line p-[18px]">

@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   },
   { href: "/categories", icon: "🏷️", label: "Categories & Brands" },
   { href: "/coupons", icon: "🎟️", label: "Coupons" },
+  { href: "/offers", icon: "📣", label: "Offers" },
   { href: "/orders", icon: "🧾", label: "Orders" },
   { href: "/returns", icon: "↩️", label: "Returns" },
   { href: "/reviews", icon: "⭐", label: "Reviews" },

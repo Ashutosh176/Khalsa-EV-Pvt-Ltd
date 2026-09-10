@@ -3,9 +3,10 @@ import { Button, CatalogProductCard } from "@khalsa-ev/ui";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { TrustStrip } from "../components/TrustStrip";
+import { OffersStrip } from "../components/OffersStrip";
 import { ProductCardActions } from "../components/ProductCardActions";
 import { ScooterHeroCarousel } from "../components/ScooterHeroCarousel";
-import { getBrands, getCatalogProducts } from "../lib/api";
+import { getBrands, getCatalogProducts, getOffers } from "../lib/api";
 
 // Mirrors the spare-parts homepage's revalidate strategy (Section 60) - this
 // section reads the same live Product table, just filtered to SCOOTER.
@@ -31,12 +32,13 @@ const WHY_ELECTRIC = [
 ];
 
 export default async function ElectricScootersHomePage() {
-  const [brands, featuredResult] = await Promise.all([
+  const [brands, featuredResult, offers] = await Promise.all([
     // Unfiltered on purpose: "Shop by Model" should list every model, not
     // just the ones with a product already assigned to them (getBrands with
     // a productType filter only returns brands that have a matching product).
     getBrands(),
     getCatalogProducts({ productType: "SCOOTER", featured: true, pageSize: 6 }),
+    getOffers(),
   ]);
 
   const scooters =
@@ -88,6 +90,8 @@ export default async function ElectricScootersHomePage() {
       <div className="border-b border-brand-line">
         <TrustStrip />
       </div>
+
+      <OffersStrip offers={offers} />
 
       {brands.length > 0 ? (
         <div className="px-4 pb-2.5 pt-7 sm:px-7">

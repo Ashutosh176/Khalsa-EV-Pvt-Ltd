@@ -3,6 +3,7 @@ import type {
   AdminCategory,
   AdminCoupon,
   AdminInventoryItem,
+  AdminOffer,
   AdminOrderDetail,
   AdminOrderListItem,
   AdminProduct,
@@ -15,6 +16,7 @@ import type {
   CreateBrandInput,
   CreateCategoryInput,
   CreateCouponInput,
+  CreateOfferInput,
   CreateProductInput,
   OrderStatus,
   PaginatedResult,
@@ -22,6 +24,7 @@ import type {
   UpdateBrandInput,
   UpdateCategoryInput,
   UpdateCouponInput,
+  UpdateOfferInput,
   UpdateProductInput,
   UpdateShipmentInput,
   VehicleBrand,
@@ -254,6 +257,41 @@ export function approveReview(accessToken: string, id: string) {
 
 export function deleteReview(accessToken: string, id: string) {
   return authFetch<AdminReview>(`/admin/reviews/${id}`, accessToken, { method: "DELETE" });
+}
+
+// --- Offers ---
+
+export function getAdminOffers(accessToken: string) {
+  return authFetch<AdminOffer[]>("/admin/offers", accessToken);
+}
+
+export function createOffer(accessToken: string, dto: CreateOfferInput) {
+  return authFetch<AdminOffer>("/admin/offers", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateOffer(accessToken: string, id: string, dto: UpdateOfferInput) {
+  return authFetch<AdminOffer>(`/admin/offers/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function deleteOffer(accessToken: string, id: string) {
+  return authFetch<AdminOffer>(`/admin/offers/${id}`, accessToken, { method: "DELETE" });
+}
+
+export async function uploadOfferImage(accessToken: string, id: string, file: File): Promise<AdminOffer> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/admin/offers/${id}/image`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    credentials: "include",
+    body: formData,
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new ApiError(body?.message ?? `Image upload failed with ${response.status}`, response.status);
+  }
+  return response.json() as Promise<AdminOffer>;
 }
 
 // --- Orders ---

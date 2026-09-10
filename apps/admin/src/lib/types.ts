@@ -57,6 +57,19 @@ export type AdminCoupon = {
   isActive: boolean;
 };
 
+export type AdminOffer = {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  isActive: boolean;
+};
+
+export type CreateOfferInput = { title: string; description?: string; startsAt?: string; endsAt?: string };
+export type UpdateOfferInput = Partial<CreateOfferInput> & { isActive?: boolean };
+
 export type AdminReview = {
   id: string;
   rating: number;

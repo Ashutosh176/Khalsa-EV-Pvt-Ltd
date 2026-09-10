@@ -15,9 +15,14 @@ export function getUploadsDir(): string {
   return path.resolve(__dirname, "../../uploads");
 }
 export const PRODUCT_IMAGES_SUBDIR = "products";
+export const OFFER_IMAGES_SUBDIR = "offers";
 
 const API_PUBLIC_URL = process.env.API_PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? 4000}`;
 
 export function toPublicImageUrl(productId: string, filename: string): string {
   return `${API_PUBLIC_URL}/uploads/${PRODUCT_IMAGES_SUBDIR}/${productId}/${filename}`;
+}
+
+export function toPublicUploadUrl(subdir: string, entityId: string, filename: string): string {
+  return `${API_PUBLIC_URL}/uploads/${subdir}/${entityId}/${filename}`;
 }
