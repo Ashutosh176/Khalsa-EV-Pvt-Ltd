@@ -16,6 +16,31 @@ export type ProductType = "SPARE_PART" | "SCOOTER" | "ACCESSORY";
 export type Category = { id: string; name: string; slug: string };
 export type Brand = { id: string; name: string; slug: string };
 
+export type AdminCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  parentId: string | null;
+  isActive: boolean;
+};
+
+export type AdminBrand = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  description: string | null;
+  isActive: boolean;
+};
+
+export type CreateCategoryInput = { name: string; slug?: string; description?: string; imageUrl?: string; parentId?: string };
+export type UpdateCategoryInput = Partial<CreateCategoryInput> & { isActive?: boolean };
+
+export type CreateBrandInput = { name: string; slug?: string; logoUrl?: string; description?: string };
+export type UpdateBrandInput = Partial<CreateBrandInput> & { isActive?: boolean };
+
 export type ProductImage = { id: string; url: string; sortOrder: number };
 export type InventoryRow = {
   id: string;

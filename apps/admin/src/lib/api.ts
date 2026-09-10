@@ -1,4 +1,6 @@
 import type {
+  AdminBrand,
+  AdminCategory,
   AdminInventoryItem,
   AdminOrderDetail,
   AdminOrderListItem,
@@ -8,10 +10,14 @@ import type {
   Brand,
   Category,
   CompatibilityEntry,
+  CreateBrandInput,
+  CreateCategoryInput,
   CreateProductInput,
   OrderStatus,
   PaginatedResult,
   ReturnStatus,
+  UpdateBrandInput,
+  UpdateCategoryInput,
   UpdateProductInput,
   UpdateShipmentInput,
   VehicleBrand,
@@ -176,6 +182,40 @@ export function getCategories() {
 
 export function getBrands() {
   return authFetch<Brand[]>("/brands", null);
+}
+
+// --- Categories & Brands (admin management) ---
+
+export function getAdminCategories(accessToken: string) {
+  return authFetch<AdminCategory[]>("/categories/admin", accessToken);
+}
+
+export function createCategory(accessToken: string, dto: CreateCategoryInput) {
+  return authFetch<AdminCategory>("/categories", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateCategory(accessToken: string, id: string, dto: UpdateCategoryInput) {
+  return authFetch<AdminCategory>(`/categories/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function archiveCategory(accessToken: string, id: string) {
+  return authFetch<AdminCategory>(`/categories/${id}`, accessToken, { method: "DELETE" });
+}
+
+export function getAdminBrands(accessToken: string) {
+  return authFetch<AdminBrand[]>("/brands/admin", accessToken);
+}
+
+export function createBrand(accessToken: string, dto: CreateBrandInput) {
+  return authFetch<AdminBrand>("/brands", accessToken, { method: "POST", body: JSON.stringify(dto) });
+}
+
+export function updateBrand(accessToken: string, id: string, dto: UpdateBrandInput) {
+  return authFetch<AdminBrand>(`/brands/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+export function archiveBrand(accessToken: string, id: string) {
+  return authFetch<AdminBrand>(`/brands/${id}`, accessToken, { method: "DELETE" });
 }
 
 // --- Orders ---

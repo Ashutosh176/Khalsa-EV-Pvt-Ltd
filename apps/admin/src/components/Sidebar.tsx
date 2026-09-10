@@ -13,6 +13,7 @@ const NAV_ITEMS = [
     label: "Products",
     subs: [["/products", "All Products"], ["/products/new", "Add Product"]] as const,
   },
+  { href: "/categories", icon: "🏷️", label: "Categories & Brands" },
   { href: "/orders", icon: "🧾", label: "Orders" },
   { href: "/returns", icon: "↩️", label: "Returns" },
   { href: "/inventory", icon: "🗄️", label: "Inventory" },
