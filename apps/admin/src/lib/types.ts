@@ -24,6 +24,16 @@ export type AdminUserRow = {
 export type CreateAdminUserInput = { email: string; password: string; name: string; role: Role };
 export type UpdateAdminUserInput = { name?: string; role?: Role; isActive?: boolean };
 
+export type AuditLogEntry = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  adminUser: { id: string; name: string; email: string };
+};
+
 export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
 export type ProductType = "SPARE_PART" | "SCOOTER" | "ACCESSORY";
 

@@ -6,6 +6,7 @@ import { ValidationPipe } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 import { getUploadsDir } from "./common/uploads";
+import { AuditLogInterceptor } from "./audit-log/audit-log.interceptor";
 
 async function bootstrap() {
   config({ path: path.resolve(__dirname, "../../../.env") });
@@ -35,6 +36,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  // Records every admin-authenticated mutation (AuditLogModule) - global
+  // so every current AND future admin route is covered without each one
+  // having to opt in.
+  app.useGlobalInterceptors(app.get(AuditLogInterceptor));
   await app.listen(process.env.PORT ?? 4000);
 }
 

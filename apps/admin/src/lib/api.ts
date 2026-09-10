@@ -11,6 +11,7 @@ import type {
   AdminReview,
   AdminUser,
   AdminUserRow,
+  AuditLogEntry,
   Brand,
   Category,
   CompatibilityEntry,
@@ -136,6 +137,14 @@ export function createAdminUser(accessToken: string, dto: CreateAdminUserInput) 
 
 export function updateAdminUser(accessToken: string, id: string, dto: UpdateAdminUserInput) {
   return authFetch<AdminUserRow>(`/admin/users/${id}`, accessToken, { method: "PATCH", body: JSON.stringify(dto) });
+}
+
+// --- Audit log (SUPER_ADMIN only) ---
+
+export type AuditLogFilters = { adminUserId?: string; entityType?: string; page?: number; pageSize?: number };
+
+export function getAuditLog(accessToken: string, filters: AuditLogFilters = {}) {
+  return authFetch<PaginatedResult<AuditLogEntry>>(`/admin/audit-log${toQueryString(filters)}`, accessToken);
 }
 
 // --- Products ---

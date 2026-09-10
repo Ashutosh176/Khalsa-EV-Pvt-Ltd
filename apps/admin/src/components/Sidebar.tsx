@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/inventory", icon: "🗄️", label: "Inventory" },
   { href: "/vehicles", icon: "🚗", label: "Vehicles" },
   { href: "/admin-users", icon: "🛡️", label: "Admin Users", superAdminOnly: true },
+  { href: "/audit-log", icon: "📜", label: "Audit Log", superAdminOnly: true },
 ];
 
 export function Sidebar() {
