@@ -150,7 +150,9 @@ function ReturnDetailContent({ id }: { id: string }) {
                 </>
               ) : (
                 <p className="text-brand-sub">
-                  No refund on file yet. Process the refund via the Razorpay dashboard once the return is completed.
+                  {ret.status === "COMPLETED"
+                    ? "No refund on file for this return."
+                    : "A refund is issued automatically via Razorpay once this return is marked Completed."}
                 </p>
               )}
             </div>

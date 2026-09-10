@@ -1,8 +1,9 @@
 import { ReturnStatus } from "@prisma/client";
 
-// REJECTED and COMPLETED are terminal. COMPLETED is reachable without a
-// Refund record existing yet - refunds are processed manually via the
-// Razorpay dashboard for now, same as order REFUNDED (see order-status.ts).
+// REJECTED and COMPLETED are terminal. Marking a return COMPLETED triggers
+// an actual Razorpay refund (see ReturnsService.updateStatusAdmin /
+// PaymentsService.refundForReturn) - unlike order REFUNDED (see
+// order-status.ts), which is still unreachable pending that same wiring.
 export const ALLOWED_RETURN_TRANSITIONS: Record<ReturnStatus, ReturnStatus[]> = {
   [ReturnStatus.REQUESTED]: [ReturnStatus.APPROVED, ReturnStatus.REJECTED],
   [ReturnStatus.APPROVED]: [ReturnStatus.PICKED_UP],

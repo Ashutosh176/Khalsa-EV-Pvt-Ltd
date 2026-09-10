@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { NotificationType, OrderStatus, Payment, PaymentStatus } from "@prisma/client";
+import { NotificationType, OrderStatus, Payment, PaymentStatus, RefundStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { requireEnv } from "../common/env";
@@ -104,8 +104,17 @@ export class PaymentsService {
 
     const event = JSON.parse(rawBody.toString("utf8")) as {
       event?: string;
-      payload?: { payment?: { entity?: { id?: string; order_id?: string; error_description?: string } } };
+      payload?: {
+        payment?: { entity?: { id?: string; order_id?: string; error_description?: string } };
+        refund?: { entity?: { id?: string } };
+      };
     };
+
+    if (event.event === "refund.processed" || event.event === "refund.failed") {
+      await this.handleRefundWebhook(event.event, event.payload?.refund?.entity?.id);
+      return;
+    }
+
     const paymentEntity = event.payload?.payment?.entity;
     if (!paymentEntity?.order_id) return;
 
@@ -127,6 +136,56 @@ export class PaymentsService {
         });
       }
     }
+  }
+
+  // Refunds created via refundForReturn below often come back "pending"
+  // from Razorpay and only settle asynchronously - this is the
+  // confirmation path for that, independent of whichever admin triggered
+  // the refund. Idempotent against duplicate webhook delivery.
+  private async handleRefundWebhook(event: "refund.processed" | "refund.failed", razorpayRefundId: string | undefined) {
+    if (!razorpayRefundId) return;
+
+    const refund = await this.prisma.refund.findFirst({ where: { razorpayRefundId } });
+    if (!refund) {
+      this.logger.warn(`Webhook for unknown Razorpay refund ${razorpayRefundId}`);
+      return;
+    }
+
+    const nextStatus = event === "refund.processed" ? RefundStatus.COMPLETED : RefundStatus.FAILED;
+    if (refund.status === nextStatus) return;
+
+    await this.prisma.refund.update({
+      where: { id: refund.id },
+      data: { status: nextStatus, processedAt: nextStatus === RefundStatus.COMPLETED ? new Date() : refund.processedAt },
+    });
+  }
+
+  // Triggered when a return is marked COMPLETED (see ReturnsService). Not
+  // wrapped in a DB transaction with the return-status update - this makes
+  // an external Razorpay call, and idempotency (skip if a Refund already
+  // exists for this return) is what makes it safe for the caller to retry
+  // on failure instead.
+  async refundForReturn(returnId: string, orderId: string, amountPaise: number) {
+    const existing = await this.prisma.refund.findUnique({ where: { returnId } });
+    if (existing) return existing;
+
+    const payment = await this.prisma.payment.findUnique({ where: { orderId } });
+    if (!payment || payment.status !== PaymentStatus.PAID || !payment.razorpayPaymentId) {
+      throw new BadRequestException("This order has no captured payment to refund");
+    }
+
+    const razorpayRefund = await this.razorpay.createRefund(payment.razorpayPaymentId, amountPaise, { returnId });
+
+    return this.prisma.refund.create({
+      data: {
+        returnId,
+        paymentId: payment.id,
+        amount: amountPaise,
+        status: razorpayRefund.status === "processed" ? RefundStatus.COMPLETED : RefundStatus.PROCESSING,
+        razorpayRefundId: razorpayRefund.id,
+        processedAt: razorpayRefund.status === "processed" ? new Date() : null,
+      },
+    });
   }
 
   private async markPaid(

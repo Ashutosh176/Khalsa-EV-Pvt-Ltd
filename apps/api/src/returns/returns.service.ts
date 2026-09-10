@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { NotificationType, OrderStatus, Prisma } from "@prisma/client";
+import { NotificationType, OrderStatus, Prisma, ReturnStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { PaymentsService } from "../payments/payments.service";
 import { CreateReturnDto } from "./dto/create-return.dto";
 import { ListReturnsQuery } from "./dto/list-returns.query";
 import { UpdateReturnStatusDto } from "./dto/update-return-status.dto";
@@ -18,6 +19,7 @@ export class ReturnsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async create(userId: string, dto: CreateReturnDto) {
@@ -103,6 +105,19 @@ export class ReturnsService {
       throw new BadRequestException(`Cannot transition a return from ${returnRequest.status} to ${dto.status}`);
     }
 
+    // Trigger the refund before flipping the status, not after: if
+    // Razorpay rejects it, the return stays in its current status (e.g.
+    // RECEIVED) instead of showing COMPLETED with no refund behind it, and
+    // the admin can just retry the same "Mark as COMPLETED" action -
+    // refundForReturn is idempotent against a Refund already existing.
+    if (dto.status === ReturnStatus.COMPLETED) {
+      const amount = returnRequest.orderItemId
+        ? (await this.prisma.orderItem.findUniqueOrThrow({ where: { id: returnRequest.orderItemId } })).totalAmount
+        : (await this.prisma.order.findUniqueOrThrow({ where: { id: returnRequest.orderId } })).totalAmount;
+
+      await this.paymentsService.refundForReturn(returnRequest.id, returnRequest.orderId, amount);
+    }
+
     await this.prisma.return.update({
       where: { id },
       data: { status: dto.status, adminNote: dto.adminNote ?? returnRequest.adminNote },
@@ -112,7 +127,9 @@ export class ReturnsService {
       returnRequest.userId,
       NotificationType.RETURN,
       `Return request ${RETURN_STATUS_LABELS[dto.status]}`,
-      `Your return request for order ${returnRequest.order.orderNumber} is now ${RETURN_STATUS_LABELS[dto.status]}.`,
+      dto.status === ReturnStatus.COMPLETED
+        ? `Your return request for order ${returnRequest.order.orderNumber} is complete. Your refund has been initiated and will reflect in your original payment method shortly.`
+        : `Your return request for order ${returnRequest.order.orderNumber} is now ${RETURN_STATUS_LABELS[dto.status]}.`,
     );
 
     return this.findOneAdmin(id);

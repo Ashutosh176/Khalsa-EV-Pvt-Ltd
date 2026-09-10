@@ -5,6 +5,7 @@ import { OrderStatus } from "@prisma/client";
 import { ReturnsService } from "./returns.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
+import { PaymentsService } from "../payments/payments.service";
 
 type Row = { id: string; [key: string]: unknown };
 type AsyncFn<T> = (...args: unknown[]) => Promise<T>;
@@ -28,7 +29,8 @@ describe("ReturnsService", () => {
       },
     };
     const notificationsService = { create: jest.fn() } as unknown as NotificationsService;
-    service = new ReturnsService(prisma as unknown as PrismaService, notificationsService);
+    const paymentsService = { refundForReturn: jest.fn() } as unknown as PaymentsService;
+    service = new ReturnsService(prisma as unknown as PrismaService, notificationsService, paymentsService);
   });
 
   it("rejects a return request for an order that does not exist or isn't owned by the user", async () => {

@@ -14,6 +14,13 @@ type RazorpayOrderResponse = {
   status: string;
 };
 
+type RazorpayRefundResponse = {
+  id: string;
+  payment_id: string;
+  amount: number;
+  status: string; // "pending" | "processed" | "failed"
+};
+
 @Injectable()
 export class RazorpayClient {
   async createOrder(amountPaise: number, receipt: string): Promise<RazorpayOrderResponse> {
@@ -42,6 +49,39 @@ export class RazorpayClient {
     if (!response.ok || !body || !("id" in body)) {
       const description = body && "error" in body ? body.error?.description : undefined;
       throw new BadGatewayException(`Razorpay order creation failed: ${description ?? response.statusText}`);
+    }
+    return body;
+  }
+
+  // Issues a refund against a captured payment. amountPaise < the original
+  // payment amount is a partial refund (used for a single-item return);
+  // passing the full amount refunds it all. Razorpay settles instantly for
+  // most methods (status comes back "processed" already) but can also
+  // return "pending" and settle later via the refund.processed webhook -
+  // callers must handle both.
+  async createRefund(razorpayPaymentId: string, amountPaise: number, notes?: Record<string, string>): Promise<RazorpayRefundResponse> {
+    const keyId = requireEnv("RAZORPAY_KEY_ID");
+    const keySecret = requireEnv("RAZORPAY_KEY_SECRET");
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+
+    let response: Response;
+    try {
+      response = await fetch(`${RAZORPAY_API_BASE}/payments/${razorpayPaymentId}/refund`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Basic ${auth}` },
+        body: JSON.stringify({ amount: amountPaise, notes }),
+      });
+    } catch (error) {
+      throw new BadGatewayException(`Could not reach Razorpay: ${(error as Error).message}`);
+    }
+
+    const body = (await response.json().catch(() => null)) as
+      | RazorpayRefundResponse
+      | { error?: { description?: string } }
+      | null;
+    if (!response.ok || !body || !("id" in body)) {
+      const description = body && "error" in body ? body.error?.description : undefined;
+      throw new BadGatewayException(`Razorpay refund failed: ${description ?? response.statusText}`);
     }
     return body;
   }
