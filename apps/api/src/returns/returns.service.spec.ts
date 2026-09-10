@@ -74,14 +74,30 @@ describe("ReturnsService", () => {
 
     await service.create("user-1", { orderId: "order-1", orderItemId: "item-1", reason: "Doesn't fit" });
 
-    expect(prisma.return.create).toHaveBeenCalledWith({
-      data: {
-        orderId: "order-1",
-        orderItemId: "item-1",
-        userId: "user-1",
-        reason: "Doesn't fit",
-      },
+    expect(prisma.return.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: {
+          orderId: "order-1",
+          orderItemId: "item-1",
+          userId: "user-1",
+          reason: "Doesn't fit",
+        },
+      }),
+    );
+  });
+
+  it("includes order and refund on the created return (matches the web ReturnView shape)", async () => {
+    prisma.order.findFirst.mockResolvedValue({
+      id: "order-1",
+      status: OrderStatus.DELIVERED,
+      items: [{ id: "item-1" }],
     });
+
+    await service.create("user-1", { orderId: "order-1", orderItemId: "item-1", reason: "Doesn't fit" });
+
+    expect(prisma.return.create).toHaveBeenCalledWith(
+      expect.objectContaining({ include: { order: { select: { id: true, orderNumber: true } }, refund: true } }),
+    );
   });
 
   it("lists returns scoped to the requesting user", async () => {

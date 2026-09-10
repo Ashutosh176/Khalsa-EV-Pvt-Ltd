@@ -8,6 +8,18 @@ import { ListReturnsQuery } from "./dto/list-returns.query";
 import { UpdateReturnStatusDto } from "./dto/update-return-status.dto";
 import { ALLOWED_RETURN_TRANSITIONS, RETURN_STATUS_LABELS } from "./return-status";
 
+// What the customer-facing endpoints (create/findAllForUser) return -
+// matches apps/web's ReturnView type exactly. Before this, create() below
+// returned the bare Return row with no relations at all (a plain
+// prisma.return.create() with no include), so the object handed back from
+// POST /returns silently didn't match ReturnView - the web account/returns
+// page crashed on r.order.orderNumber the moment a customer submitted a
+// new return and it got optimistically added to the list.
+const CUSTOMER_INCLUDE = {
+  order: { select: { id: true, orderNumber: true } },
+  refund: true,
+} satisfies Prisma.ReturnInclude;
+
 const ADMIN_INCLUDE = {
   order: { select: { id: true, orderNumber: true } },
   user: { select: { id: true, name: true, email: true } },
@@ -45,16 +57,14 @@ export class ReturnsService {
         userId,
         reason: dto.reason,
       },
+      include: CUSTOMER_INCLUDE,
     });
   }
 
   findAllForUser(userId: string) {
     return this.prisma.return.findMany({
       where: { userId },
-      include: {
-        order: { select: { id: true, orderNumber: true } },
-        refund: true,
-      },
+      include: CUSTOMER_INCLUDE,
       orderBy: { createdAt: "desc" },
     });
   }
