@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
-  { src: "/hero-scooter-1.png", alt: "Khalsa EV electric scooter parked at a night showroom with city skyline" },
-  { src: "/hero-scooter-2.png", alt: "Khalsa EV electric scooter beside a lake at sunrise with city skyline" },
-  { src: "/hero-scooter-3.png", alt: "Khalsa EV electric scooter on a hilltop terrace overlooking mountains at sunset" },
-  { src: "/hero-scooter-4.png", alt: "Khalsa EV electric scooter on a terrace at dusk with city skyline" },
+  { src: "/hero-scooter-1.png", alt: "Black Khalsa EV electric scooter in a dark studio lit with a warm amber glow" },
+  { src: "/hero-scooter-2.png", alt: "Black and orange Khalsa EV electric scooter on a rooftop terrace at sunset with city skyline" },
+  { src: "/hero-scooter-3.png", alt: "Grey Khalsa EV electric scooter on a terrace overlooking mountains at sunset" },
+  { src: "/hero-scooter-4.png", alt: "Black and white Khalsa EV electric scooter with checkered graphics on a terrace at sunset" },
 ];
 
 const AUTOPLAY_MS = 2200;
